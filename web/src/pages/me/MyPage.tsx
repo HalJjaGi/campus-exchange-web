@@ -40,7 +40,18 @@ export function MyPage() {
           idPrefix="me"
           items={TABS}
           value={tab}
-          onChange={(t) => setParams(t === "holdings" ? {} : { tab: t }, { replace: true })}
+          onChange={(t) =>
+            // 다른 주소 값(예: 개발용 ?fail=)은 그대로 두고 tab만 바꾼다
+            setParams(
+              (prev) => {
+                const next = new URLSearchParams(prev);
+                if (t === "holdings") next.delete("tab");
+                else next.set("tab", t);
+                return next;
+              },
+              { replace: true },
+            )
+          }
         />
         <div role="tabpanel" id={`me-panel-${tab}`} aria-labelledby={`me-tab-${tab}`}>
           {tab === "holdings" ? <HoldingsTable /> : <LedgerList />}

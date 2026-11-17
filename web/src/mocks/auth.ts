@@ -13,6 +13,7 @@ import type {
   SignupResult,
   Title,
 } from "@/shared/types/api";
+import { DEMO_EMAIL, INITIAL_GRANT, activateAccount } from "./account";
 import { closeMail, showMail } from "./devMailbox";
 import { JOINED_DAYS_AGO } from "./ledger";
 import { MockError, getIndex, marketHeadline, policy } from "./market";
@@ -58,14 +59,23 @@ function save(key: string, value: unknown) {
 }
 
 const users: Record<string, StoredUser> = load(USERS_KEY, {
-  "demo@campus.ac.kr": { password: "campus2026", nickname: "데모", titleId: "t-freshman" },
+  [DEMO_EMAIL]: { password: "campus2026", nickname: "데모", titleId: "t-freshman" },
 });
 let sessionEmail: string | null = load<string | null>(SESSION_KEY, null);
 
-const setSession = (email: string | null) => {
+/** joinedAt이 없는 계정(데모, 예전에 저장된 mock 계정)은 데모 이력의 가입일로 본다 */
+function joinedAtOf(u: StoredUser): number {
+  return u.joinedAt ? Date.parse(u.joinedAt) : Date.now() - JOINED_DAYS_AGO * 86_400_000;
+}
+
+/** 로그인한 계정의 가짜 자산을 연다. 계정마다 잔고·보유 종목·내역이 따로다 */
+function setSession(email: string | null) {
   sessionEmail = email;
   save(SESSION_KEY, email);
-};
+  const u = email ? users[email] : undefined;
+  if (email && u) activateAccount(email, joinedAtOf(u));
+}
+setSession(sessionEmail);
 
 const toSessionUser = (u: StoredUser): SessionUser => ({
   nickname: u.nickname,
@@ -162,7 +172,7 @@ export function signup(req: SignupRequest, idempotencyKey: string | null): Signu
   const index = getIndex();
   const result: SignupResult = {
     user: toSessionUser(user),
-    initialGrant: "1000000",
+    initialGrant: INITIAL_GRANT,
     welcome: {
       policy: { baseRate: policy.baseRate, depositRate: policy.depositRate },
       index: { value: index.value, changeRate: index.changeRate, intraday: index.intraday },
@@ -204,7 +214,7 @@ export function getProfile(): MyProfile {
   return {
     ...toSessionUser(u),
     schoolDomain: email.split("@")[1] ?? "",
-    joinedAt: u.joinedAt ?? new Date(Date.now() - JOINED_DAYS_AGO * 86_400_000).toISOString(),
+    joinedAt: new Date(joinedAtOf(u)).toISOString(),
     status: "ACTIVE",
   };
 }

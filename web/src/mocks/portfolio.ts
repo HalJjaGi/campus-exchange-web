@@ -12,9 +12,28 @@ const DAY = 86_400_000;
 const MISSING_DAYS_AGO = new Set([9, 8]);
 const RANGE_DAYS: Record<HistoryRange, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
-const snapshots: AssetSnapshot[] = [];
+interface History {
+  /** 가입일(한국 시간). 조회 구간이 이보다 앞서지 않는다 */
+  joined: string;
+  snapshots: AssetSnapshot[];
+}
 
-function seed() {
+const histories = new Map<string, History>();
+let history: History = { joined: kstDate(Date.now()), snapshots: [] };
+
+/** 계정 자산 기록을 연다. 새 계정은 기록이 없다(오늘 가입했으면 내일부터 쌓인다) */
+export function openHistory(key: string, joinedAt: number, demo: boolean) {
+  const existing = histories.get(key);
+  if (existing) {
+    history = existing;
+    return;
+  }
+  history = { joined: kstDate(joinedAt), snapshots: demo ? seedDemo() : [] };
+  histories.set(key, history);
+}
+
+function seedDemo(): AssetSnapshot[] {
+  const snapshots: AssetSnapshot[] = [];
   const start = new Decimal(1_000_000);
   const yesterday = totalAsset().times(0.992 + Math.random() * 0.01);
   for (let ago = JOINED_DAYS_AGO; ago >= 1; ago--) {
@@ -28,14 +47,14 @@ function seed() {
     const at = Date.now() - ago * DAY;
     snapshots.push({ date: kstDate(at), totalAsset: value.toString(), evaluatedAt: new Date(at).toISOString() });
   }
+  return snapshots;
 }
-seed();
 
 /** 구간 끝은 어제(오늘 스냅샷은 아직 없다). 시작은 가입일보다 앞서지 않는다 */
 export function getAssetHistory(range: HistoryRange): AssetHistory {
   const to = kstDate(Date.now() - DAY);
-  const joined = kstDate(Date.now() - JOINED_DAYS_AGO * DAY);
   const wanted = kstDate(Date.now() - RANGE_DAYS[range] * DAY);
-  const from = wanted > joined ? wanted : joined;
-  return { from, to, items: snapshots.filter((s) => s.date >= from && s.date <= to) };
+  let from = wanted > history.joined ? wanted : history.joined;
+  if (from > to) from = to; // 오늘 가입: 아직 기록할 날이 없다
+  return { from, to, items: history.snapshots.filter((s) => s.date >= from && s.date <= to) };
 }

@@ -1,6 +1,7 @@
 /**
  * 개발용 가짜 원장. 실제 서버처럼 모든 잔액 변동을 한 줄씩 쌓는다(수정·삭제 없음).
  * 지갑 잔액 = 사용 가능 + 주문 예약. 예약은 내 돈이 묶일 뿐이라 원장에 남기지 않는다.
+ * 계정마다 장부가 따로 있고, 로그인한 계정의 장부가 열린다(account.ts).
  *
  * 데모 계정 이력: 21일 전 가입 지원금 → 다음 날 컴퓨터공학과 30주 매수 → 오락실 보상을 예금으로 → 매일 예금 이자
  */
@@ -14,8 +15,27 @@ const DAY = 86_400_000;
 
 export const JOINED_DAYS_AGO = 21;
 
-const entries: LedgerEntry[] = [];
-const balances: Record<LedgerAccount, Decimal> = { WALLET: new Decimal(0), BANK: new Decimal(0) };
+interface Book {
+  entries: LedgerEntry[];
+  balances: Record<LedgerAccount, Decimal>;
+}
+
+const newBook = (): Book => ({ entries: [], balances: { WALLET: new Decimal(0), BANK: new Decimal(0) } });
+const books = new Map<string, Book>();
+/** 로그인 전에도 시장 mock이 돌 수 있게 빈 장부를 하나 열어 둔다 */
+let book: Book = newBook();
+
+/** 계정 장부를 연다. 처음 여는 계정이면 init으로 이력을 채운다 */
+export function openBook(key: string, init: () => void) {
+  const existing = books.get(key);
+  if (existing) {
+    book = existing;
+    return;
+  }
+  book = newBook();
+  books.set(key, book);
+  init();
+}
 
 export function record(
   accountType: LedgerAccount,
@@ -24,30 +44,30 @@ export function record(
   trade: LedgerTrade | null = null,
   at: string = new Date().toISOString(),
 ) {
-  balances[accountType] = balances[accountType].plus(amount);
-  entries.push({
+  book.balances[accountType] = book.balances[accountType].plus(amount);
+  book.entries.push({
     id: mockId("l"),
     accountType,
     txType,
     amount: amount.toString(),
-    balanceAfter: balances[accountType].toString(),
+    balanceAfter: book.balances[accountType].toString(),
     trade,
     createdAt: at,
   });
 }
 
-export const balanceOf = (a: LedgerAccount) => balances[a];
+export const balanceOf = (a: LedgerAccount) => book.balances[a];
 
 /** 오늘(한국 시간) 들어온 이자 합계 */
 export function interestToday(): Decimal {
   const today = kstDate(Date.now());
-  return entries
+  return book.entries
     .filter((e) => e.txType === "INTEREST" && kstDate(Date.parse(e.createdAt)) === today)
     .reduce((s, e) => s.plus(e.amount), new Decimal(0));
 }
 
 export function listLedger(types: LedgerTxType[], from: string | null, cursor: string | null): LedgerPage {
-  const filtered = entries
+  const filtered = book.entries
     .filter(
       (e) => (types.length === 0 || types.includes(e.txType)) && (!from || kstDate(Date.parse(e.createdAt)) >= from),
     )
@@ -61,7 +81,7 @@ export function listLedger(types: LedgerTxType[], from: string | null, cursor: s
 
 /* ───────── 데모 이력 ───────── */
 
-function seed() {
+export function seedDemoLedger() {
   const day = (ago: number, h: number, m = 0) => {
     const d = new Date(Date.now() - ago * DAY);
     d.setHours(h, m, 0, 0);
@@ -84,8 +104,7 @@ function seed() {
   record("BANK", "REWARD", new Decimal(20_000), null, day(14, 21, 40));
   // 예금 이자: 연 2% 일할. 실제 금리·지급 시각은 중앙은행 배치가 정한다(SD-15)
   for (let ago = 13; ago >= 0; ago--) {
-    const interest = balances.BANK.times("0.02").dividedBy(365).toDecimalPlaces(2);
+    const interest = book.balances.BANK.times("0.02").dividedBy(365).toDecimalPlaces(2);
     record("BANK", "INTEREST", interest, null, day(ago, 0, 5));
   }
 }
-seed();

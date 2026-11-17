@@ -5,7 +5,7 @@
  * 단순화한 점
  * - 호가는 현재가 주변에 매번 다시 만든다(잔량만 조금씩 유지·변동)
  * - 내 지정가 주문은 가격이 닿으면 일부 또는 전부 체결된 것으로 처리한다
- * - 개발 편의를 위해 컴퓨터공학과 30주를 보유한 상태로 시작한다(가입·매수 이력은 ledger.ts)
+ * - 데모 계정은 컴퓨터공학과 30주를 보유한 상태로 시작한다(이력은 ledger.ts). 새로 가입한 계정은 빈 계좌
  */
 import Decimal from "decimal.js-light";
 import { emit } from "./bus";
@@ -142,11 +142,37 @@ function recomputeIndex(at: string) {
 
 /* ───────── 내 계좌 ───────── */
 
-const account = {
-  available: balanceOf("WALLET"),
+interface Account {
+  available: Decimal;
+  reserved: Decimal;
+  holdings: Map<string, { qty: number; avg: Decimal }>;
+  orders: Map<string, MyOrder>;
+}
+
+const newAccount = (available: Decimal): Account => ({
+  available,
   reserved: new Decimal(0),
-  holdings: new Map<string, { qty: number; avg: Decimal }>([["CSE", { qty: 30, avg: new Decimal(12000) }]]),
-};
+  holdings: new Map(),
+  orders: new Map(),
+});
+const accounts = new Map<string, Account>();
+/** 로그인 전에도 시세가 돌 수 있게 빈 계좌를 하나 열어 둔다 */
+let account: Account = newAccount(new Decimal(0));
+
+/**
+ * 계정 계좌를 연다(account.ts가 로그인할 때 부른다). 장부(openBook)를 먼저 열어야 한다 —
+ * 처음 여는 계좌의 예수금은 그 장부의 지갑 잔액에서 시작한다.
+ */
+export function openTradingAccount(key: string, holdings: Array<{ code: string; qty: number; avg: number }>) {
+  const existing = accounts.get(key);
+  if (existing) {
+    account = existing;
+    return;
+  }
+  account = newAccount(balanceOf("WALLET"));
+  for (const h of holdings) account.holdings.set(h.code, { qty: h.qty, avg: new Decimal(h.avg) });
+  accounts.set(key, account);
+}
 
 interface MyOrder {
   orderId: string;
@@ -162,11 +188,10 @@ interface MyOrder {
   reservedCash: Decimal;
 }
 
-const myOrders = new Map<string, MyOrder>();
 const idempotency = new Map<string, OrderResult>();
 
 const lockedSellQty = (code: string) =>
-  [...myOrders.values()]
+  [...account.orders.values()]
     .filter((o) => o.code === code && o.side === "SELL" && isOpen(o))
     .reduce((n, o) => n + (o.quantity - o.filled), 0);
 
@@ -237,7 +262,7 @@ function jitterBook(code: string) {
 }
 
 function myRestingQty(code: string, side: OrderSide, price: number): number {
-  return [...myOrders.values()]
+  return [...account.orders.values()]
     .filter((o) => o.code === code && o.side === side && isOpen(o) && o.price.toNumber() === price)
     .reduce((n, o) => n + (o.quantity - o.filled), 0);
 }
@@ -473,7 +498,7 @@ export function placeOrder(req: PlaceOrderRequest, idempotencyKey: string | null
 
   const orderId = id("o");
   if (restQty > 0 && limit) {
-    myOrders.set(orderId, {
+    account.orders.set(orderId, {
       orderId,
       code: req.code,
       side: req.side,
@@ -503,7 +528,7 @@ export function placeOrder(req: PlaceOrderRequest, idempotencyKey: string | null
 }
 
 export function cancelOrder(orderId: string): void {
-  const o = myOrders.get(orderId);
+  const o = account.orders.get(orderId);
   if (!o) throw new MockError(404, "ORDER_NOT_FOUND");
   if (!isOpen(o)) throw new MockError(409, "ORDER_NOT_CANCELABLE");
   o.status = "CANCELED";
@@ -515,7 +540,7 @@ export function cancelOrder(orderId: string): void {
 }
 
 export function getOpenOrders(code?: string): OpenOrder[] {
-  return [...myOrders.values()]
+  return [...account.orders.values()]
     .filter((o) => isOpen(o) && (!code || o.code === code))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map((o) => ({
@@ -537,7 +562,7 @@ function fillRestingOrders(code: string, at: string) {
   const price = Number(mustQuote(code).price);
   const bestBid = floorTick(price);
   const bestAsk = bestBid + tickOf(price);
-  for (const o of myOrders.values()) {
+  for (const o of account.orders.values()) {
     if (o.code !== code || !isOpen(o)) continue;
     const p = o.price.toNumber();
     const reachable = o.side === "BUY" ? p >= bestAsk : p <= bestBid;
