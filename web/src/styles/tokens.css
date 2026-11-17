@@ -1,0 +1,309 @@
+/*
+ * 캠퍼스 가상 증권 거래소 — Design Tokens v0.1
+ * 규칙과 사용처는 DESIGN.md 참고. 컴포넌트에서는 원시값(hex, px) 대신 반드시 이 토큰만 사용한다.
+ *
+ * 테마: <html data-theme="light|dark">. 속성이 없으면 OS 설정을 따른다.
+ */
+
+/* ───────────────────────── 1. 원시 팔레트 (컴포넌트에서 직접 참조 금지) ───────────────────────── */
+:root {
+  --gray-0: #ffffff;
+  --gray-25: #fafaf9;
+  --gray-50: #f4f4f2;
+  --gray-100: #e9e9e6;
+  --gray-200: #e0e0dc;
+  --gray-300: #cfcfca;
+  --gray-400: #a9adb3;
+  --gray-500: #7a7e85;
+  --gray-600: #4a4d52;
+  --gray-700: #383b40;
+  --gray-800: #26282c;
+  --gray-850: #1c1d20;
+  --gray-900: #17181b;
+  --gray-950: #0f1012;
+
+  --red-500: #e0303c;   /* 상승 (light) */
+  --red-400: #ff4d5a;   /* 상승 (dark) */
+  --blue-600: #1f66e0;  /* 하락 (light) */
+  --blue-400: #4d8dff;  /* 하락 (dark) */
+  --amber-400: #f2a900; /* 주의 · 전광판 */
+  --amber-700: #8f5600;
+  --green-600: #1e8a4c; /* 인증 · 확인 */
+  --green-400: #3cc47a;
+}
+
+/* ───────────────────────── 2. 의미 토큰 — Light ───────────────────────── */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* 면 */
+  --bg: var(--gray-25);
+  --surface: var(--gray-0);
+  --surface-sunken: var(--gray-50);
+  --surface-hover: var(--gray-50);
+  --surface-inverse: var(--gray-900);
+
+  /* 선 */
+  --border: var(--gray-200);
+  --border-strong: var(--gray-300);
+
+  /* 글자 */
+  --text: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+  --text-disabled: var(--gray-400);
+  --text-inverse: var(--gray-0);
+
+  /* 주 행동 (브랜드 = 잉크. 화면에서 가장 강한 버튼 1개에만) */
+  --action: var(--gray-900);
+  --action-hover: var(--gray-700);
+  --on-action: var(--gray-0);
+
+  /* 차트 계열색 — 등락과 무관한 구분(자산 구성·자산 추이). 빨강·파랑은 쓰지 않는다 */
+  --series-1: var(--gray-900);
+  --series-2: var(--gray-500);
+  --series-3: var(--gray-300);
+
+  /* 시세 — 한국 시장 관례: 상승 빨강 / 하락 파랑 / 보합 회색 */
+  --up: var(--red-500);
+  --up-soft: #fdecee;
+  --down: var(--blue-600);
+  --down-soft: #eaf1fd;
+  --flat: var(--gray-600);
+
+  /* 매수 = up, 매도 = down (별칭으로 의도를 드러낸다) */
+  --buy: var(--up);
+  --buy-soft: var(--up-soft);
+  --sell: var(--down);
+  --sell-soft: var(--down-soft);
+  /* 매수·매도 버튼 글자 — 테마와 무관하게 흰색 */
+  --on-buy: var(--gray-0);
+  --on-sell: var(--gray-0);
+
+  /* 상태 */
+  --attention: var(--amber-700);       /* VI, 새 글, 잔여 시간 임박 — 글자 */
+  --attention-soft: #fff4dc;
+  --attention-solid: var(--amber-400); /* 배경으로 쓸 때 */
+  --on-attention: var(--gray-950);
+  --positive: var(--green-600);        /* 인증 뱃지, 지급 완료 */
+  --positive-soft: #e6f4ec;
+  --danger: #c4232f;                   /* 오류 · 담보 부족. 반드시 아이콘+문구와 함께 */
+  --danger-soft: #fbe9ea;
+
+  --focus-ring: var(--gray-900);
+  --scrim: rgb(15 16 18 / 0.48);
+
+  /* 반전 면(토스트 등) 위의 상태 아이콘 */
+  --positive-on-inverse: var(--green-400);
+  --danger-on-inverse: #ff6b6b;
+
+  /* 높이감은 그림자보다 테두리로. 그림자는 떠 있는 레이어(팝오버·모달·플로팅 위젯)에만 */
+  --shadow-float: 0 1px 2px rgb(15 16 18 / 0.06), 0 8px 24px rgb(15 16 18 / 0.08);
+}
+
+/* ───────────────────────── 3. 의미 토큰 — Dark ───────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: var(--gray-950);
+    --surface: var(--gray-900);
+    --surface-sunken: #0b0c0e;
+    --surface-hover: var(--gray-850);
+    --surface-inverse: var(--gray-50);
+    --border: var(--gray-800);
+    --border-strong: var(--gray-700);
+    --text: #edeef0;
+    --text-secondary: #b4b8be;
+    --text-tertiary: #80858c;
+    --text-disabled: #5a5e64;
+    --text-inverse: var(--gray-950);
+    --action: #edeef0;
+    --action-hover: #ffffff;
+    --on-action: var(--gray-950);
+    --series-1: #edeef0;
+    --series-2: #80858c;
+    --series-3: var(--gray-600);
+    --up: var(--red-400);
+    --up-soft: rgb(255 77 90 / 0.14);
+    --down: var(--blue-400);
+    --down-soft: rgb(77 141 255 / 0.14);
+    --flat: #b4b8be;
+    --buy: var(--up);
+    --buy-soft: var(--up-soft);
+    --sell: var(--down);
+    --sell-soft: var(--down-soft);
+    --attention: var(--amber-400);
+    --attention-soft: rgb(242 169 0 / 0.14);
+    --attention-solid: var(--amber-400);
+    --on-attention: var(--gray-950);
+    --positive: var(--green-400);
+    --positive-soft: rgb(60 196 122 / 0.14);
+    --danger: #ff6b6b;
+    --danger-soft: rgb(255 107 107 / 0.14);
+    --focus-ring: #edeef0;
+    --scrim: rgb(0 0 0 / 0.6);
+    --positive-on-inverse: var(--green-600);
+    --danger-on-inverse: #c4232f;
+    --shadow-float: 0 0 0 1px var(--gray-800), 0 12px 32px rgb(0 0 0 / 0.5);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: var(--gray-950);
+  --surface: var(--gray-900);
+  --surface-sunken: #0b0c0e;
+  --surface-hover: var(--gray-850);
+  --surface-inverse: var(--gray-50);
+  --border: var(--gray-800);
+  --border-strong: var(--gray-700);
+  --text: #edeef0;
+  --text-secondary: #b4b8be;
+  --text-tertiary: #80858c;
+  --text-disabled: #5a5e64;
+  --text-inverse: var(--gray-950);
+  --action: #edeef0;
+  --action-hover: #ffffff;
+  --on-action: var(--gray-950);
+  --series-1: #edeef0;
+  --series-2: #80858c;
+  --series-3: var(--gray-600);
+  --up: var(--red-400);
+  --up-soft: rgb(255 77 90 / 0.14);
+  --down: var(--blue-400);
+  --down-soft: rgb(77 141 255 / 0.14);
+  --flat: #b4b8be;
+  --buy: var(--up);
+  --buy-soft: var(--up-soft);
+  --sell: var(--down);
+  --sell-soft: var(--down-soft);
+  --attention: var(--amber-400);
+  --attention-soft: rgb(242 169 0 / 0.14);
+  --attention-solid: var(--amber-400);
+  --on-attention: var(--gray-950);
+  --positive: var(--green-400);
+  --positive-soft: rgb(60 196 122 / 0.14);
+  --danger: #ff6b6b;
+  --danger-soft: rgb(255 107 107 / 0.14);
+  --focus-ring: #edeef0;
+  --scrim: rgb(0 0 0 / 0.6);
+  --positive-on-inverse: var(--green-600);
+  --danger-on-inverse: #c4232f;
+  --shadow-float: 0 0 0 1px var(--gray-800), 0 12px 32px rgb(0 0 0 / 0.5);
+}
+
+/* ───────────────────────── 4. 타이포그래피 ───────────────────────── */
+:root {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  /* 전광판 전용. 다른 곳에 쓰지 않는다 */
+  --font-board: "JetBrains Mono", "D2Coding", ui-monospace, monospace;
+
+  /* 크기 / 행간 — 거래 화면 밀도를 기준으로 본문 14px */
+  --text-2xs: 9px;   --leading-2xs: 12px;  /* LP 표시 1곳 */
+  --text-xs: 12px;   --leading-xs: 16px;   /* 보조 라벨, 호가창 잔량 */
+  --text-sm: 13px;   --leading-sm: 18px;   /* 표 셀, 칩 */
+  --text-md: 14px;   --leading-md: 20px;   /* 기본 본문 */
+  --text-lg: 16px;   --leading-lg: 24px;   /* 게시글 본문, 입력 */
+  --text-xl: 20px;   --leading-xl: 28px;   /* 섹션 제목, 현재가(패널) */
+  --text-2xl: 24px;  --leading-2xl: 32px;  /* 페이지 제목 */
+  --text-3xl: 32px;  --leading-3xl: 40px;  /* 지수 값, 총 평가 자산 */
+  --text-4xl: 44px;  --leading-4xl: 52px;  /* 가입 완료 카운트업 1곳 */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-tight: -0.02em; /* 24px 이상 숫자·제목 */
+}
+
+/* ───────────────────────── 5. 간격 · 모양 · 레이아웃 ───────────────────────── */
+:root {
+  /* 4px 그리드 */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* 반경은 작게. 큰 둥근 카드 금지 */
+  --radius-xs: 2px;   /* 호가 막대, 진행 게이지 */
+  --radius-sm: 4px;   /* 칩, 배지, 입력 */
+  --radius-md: 6px;   /* 버튼, 카드 */
+  --radius-lg: 10px;  /* 모달, 팝오버 */
+  --radius-full: 999px; /* 알림 숫자 배지에만 */
+
+  --border-width: 1px;
+
+  --control-h-sm: 28px;
+  --control-h-md: 36px;
+  --control-h-lg: 44px;  /* 주문 제출 버튼, 모바일 터치 */
+
+  --row-h-dense: 24px;   /* 호가창 1단계, 체결 테이프 */
+  --row-h-table: 40px;   /* 일반 표 */
+
+  --gnb-h: 56px;
+  --policy-bar-h: 32px;
+  --content-max: 1440px;
+  --gutter: 16px;
+
+  /* 레이어 */
+  --z-sticky: 10;
+  --z-float: 20;     /* 자산 플로팅 위젯 */
+  --z-overlay: 30;   /* VI 오버레이 */
+  --z-popover: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+}
+
+/* ───────────────────────── 6. 모션 ───────────────────────── */
+:root {
+  --dur-instant: 80ms;   /* hover, press */
+  --dur-fast: 160ms;     /* 탭 전환, 토글 */
+  --dur-base: 240ms;     /* 팝오버, 모달 */
+  --dur-reorder: 320ms;  /* 랭킹 재배치(FLIP) */
+  --dur-flash: 600ms;    /* 시세 변동 배경 깜빡임 */
+  --dur-count: 1200ms;   /* 가입 완료 카운트업 */
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-reorder: 0ms;
+    --dur-flash: 0ms;
+    --dur-count: 0ms;
+  }
+}
+
+/* ───────────────────────── 7. 베이스 ───────────────────────── */
+html {
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all; /* 한국어 어절 단위 줄바꿈 */
+}
+
+/* 숫자가 바뀌어도 폭이 흔들리지 않도록 — 가격·수량·금액·시각 전부 */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

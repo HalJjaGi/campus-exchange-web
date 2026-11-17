@@ -1,0 +1,174 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.sentTo {
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.sentTo strong {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+  word-break: break-all;
+}
+
+.textButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: inherit;
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.inlineLink a {
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.help {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+.formError {
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+.titles {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.titleGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.titleOption {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-h-md);
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.titleOption:hover {
+  color: var(--text);
+}
+
+.titleOption[data-selected] {
+  border-color: var(--text);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.titleOption:has(:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── 가입 완료 모달 ── */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.grantLabel {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.grant {
+  margin-top: calc(var(--space-3) * -1);
+  font-size: var(--text-4xl);
+  line-height: var(--leading-4xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chips strong {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.market {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-top: var(--border-width) solid var(--border);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.market svg {
+  width: 100%;
+}
+
+.marketHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.marketValue {
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.marketCaption {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.headline {
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+/* ── 로그인 확인 대기 ── */
+.gate {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--gutter);
+}

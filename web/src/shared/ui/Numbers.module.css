@@ -1,0 +1,76 @@
+.value {
+  border-radius: var(--radius-xs);
+}
+
+.up {
+  color: var(--up);
+}
+
+.down {
+  color: var(--down);
+}
+
+.flat {
+  color: var(--flat);
+}
+
+.stale {
+  color: var(--text-tertiary);
+}
+
+.flashA.flashUp {
+  animation: flash-up-a var(--dur-flash) var(--ease-out);
+}
+
+.flashB.flashUp {
+  animation: flash-up-b var(--dur-flash) var(--ease-out);
+}
+
+.flashA.flashDown {
+  animation: flash-down-a var(--dur-flash) var(--ease-out);
+}
+
+.flashB.flashDown {
+  animation: flash-down-b var(--dur-flash) var(--ease-out);
+}
+
+@keyframes flash-up-a {
+  from {
+    background: var(--up-soft);
+  }
+}
+
+@keyframes flash-up-b {
+  from {
+    background: var(--up-soft);
+  }
+}
+
+@keyframes flash-down-a {
+  from {
+    background: var(--down-soft);
+  }
+}
+
+@keyframes flash-down-b {
+  from {
+    background: var(--down-soft);
+  }
+}
+
+.asOf {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  white-space: nowrap;
+}
+
+.lagDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--attention);
+}

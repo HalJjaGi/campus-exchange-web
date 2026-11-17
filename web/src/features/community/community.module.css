@@ -1,0 +1,338 @@
+/* ── 피드 ── */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.feedEnd {
+  padding: var(--space-4) 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* ── 게시글 카드 ── */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+/* 우선 노출 중인 새 글: 왼쪽 선 + 배경이 천천히 빠진다(DESIGN.md §5.2) */
+.fresh {
+  box-shadow: inset 2px 0 0 var(--attention);
+
+  /* 모션 축소면 토큰이 0이 되어 페이드 없이 선만 남는다 */
+  animation: fresh-fade calc(var(--dur-flash) * 10) var(--ease-out);
+}
+
+@keyframes fresh-fade {
+  from {
+    background: var(--attention-soft);
+  }
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.author {
+  font-weight: var(--weight-semibold);
+}
+
+.authorTitle {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.freshLabel {
+  color: var(--attention);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.time {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+a.time:hover {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.tag {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.content {
+  font-size: var(--text-lg);
+  line-height: var(--leading-lg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.cardFoot {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: var(--control-h-sm);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.action:disabled {
+  cursor: default;
+}
+
+.action:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.actionOn {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.report {
+  margin-left: auto;
+  font-size: var(--text-xs);
+}
+
+.comments {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-1);
+  border-top: var(--border-width) solid var(--border);
+}
+
+.comment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) 0 var(--space-3) var(--space-3);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.comment:last-child {
+  border-bottom: 0;
+}
+
+.commentHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.commentBody {
+  font-size: var(--text-md);
+  overflow-wrap: anywhere;
+}
+
+/* ── 공시 카드: 게시글과 다른 모양(테두리 대신 가라앉은 면 + 라벨) ── */
+.disclosure {
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.disclosureLink {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+}
+
+.disclosureMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.disclosureBadge {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-weight: var(--weight-semibold);
+}
+
+.disclosureTitle {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.disclosureLink:hover .disclosureTitle {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.disclosureSummary {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ── 작성기 ── */
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.tagPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tagOption {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-h-sm);
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.tagOption:hover {
+  color: var(--text);
+}
+
+.tagOption[data-selected] {
+  border-color: var(--text);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.tagOption:has(:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: var(--text-lg);
+  line-height: var(--leading-lg);
+  resize: vertical;
+}
+
+.textarea:focus {
+  border-color: var(--focus-ring);
+  outline: none;
+}
+
+.textareaOver,
+.textareaOver:focus {
+  border-color: var(--danger);
+}
+
+.composerFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.composerFoot > button {
+  margin-left: auto;
+}
+
+.counter {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.counterWarn {
+  color: var(--attention);
+  font-weight: var(--weight-semibold);
+}
+
+.counterOver {
+  color: var(--danger);
+}
+
+.composerError {
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+.composerHint {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+/* ── 신고 ── */
+.reasons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.reasonLegend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.reason {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.reasonHelp {
+  margin-top: var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}

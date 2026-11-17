@@ -1,0 +1,48 @@
+.viewport {
+  position: fixed;
+  bottom: var(--space-6);
+  left: 50%;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: max-content;
+  max-width: calc(100vw - var(--gutter) * 2);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  box-shadow: var(--shadow-float);
+  pointer-events: auto;
+  animation: enter var(--dur-base) var(--ease-out);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.positive .icon {
+  color: var(--positive-on-inverse);
+}
+
+.danger .icon {
+  color: var(--danger-on-inverse);
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}

@@ -1,0 +1,239 @@
+.shell {
+  min-height: 100vh;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--surface);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.gnb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  max-width: var(--content-max);
+  height: var(--gnb-h);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.logo {
+  flex-shrink: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.navLink {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-weight: var(--weight-medium);
+}
+
+.navLink:hover {
+  color: var(--text);
+}
+
+.navActive {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.userMenu {
+  position: relative;
+}
+
+.userButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-h-md);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.userButton:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.userTitle {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.userName {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: var(--z-popover);
+  min-width: 160px;
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+
+.menuItem {
+  width: 100%;
+  height: var(--control-h-md);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: var(--surface-hover);
+}
+
+.policyBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: var(--content-max);
+  height: var(--policy-bar-h);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.policyItems {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.policyItems strong {
+  margin-left: var(--space-1);
+  color: var(--text-secondary);
+  font-weight: var(--weight-semibold);
+}
+
+.policyError {
+  color: var(--text-tertiary);
+}
+
+.main {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--gutter) var(--space-12);
+}
+
+.widget {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: var(--z-float);
+  min-width: 200px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+
+.widgetList {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.widgetList > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.widgetList dt {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.widgetList dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.widgetRetry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.widgetStale {
+  margin-top: var(--space-2);
+  color: var(--attention);
+  font-size: var(--text-xs);
+}
+
+@media (width < 768px) {
+  .gnb {
+    gap: var(--space-3);
+  }
+
+  .userTitle {
+    display: none;
+  }
+
+  /* 하단에 고정된 자산 위젯이 마지막 내용을 가리지 않도록 */
+  .main {
+    padding-bottom: calc(var(--space-12) * 2);
+  }
+
+  .widget {
+    right: var(--gutter);
+    left: var(--gutter);
+    min-width: 0;
+  }
+
+  .widgetList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .widgetList > div {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .widgetList > div:nth-child(n + 4) {
+    display: none;
+  }
+}

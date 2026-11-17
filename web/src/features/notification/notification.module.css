@@ -1,0 +1,199 @@
+.bell {
+  position: relative;
+}
+
+.bellButton {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-h-md);
+  height: var(--control-h-md);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.bellButton:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* 미확인 수: radius-full은 여기에만 쓴다(DESIGN.md §4) */
+.count {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--danger);
+  color: var(--on-buy);
+  font-size: var(--text-2xs);
+  line-height: 18px;
+  font-weight: var(--weight-bold);
+  text-align: center;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - var(--gutter) * 2));
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.panelTitle {
+  font-weight: var(--weight-semibold);
+}
+
+.panelBody {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.panelFoot {
+  padding: var(--space-3);
+  border-top: var(--border-width) solid var(--border);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-align: center;
+}
+
+.panelFoot:hover {
+  color: var(--text);
+}
+
+.textButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.textButton:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.textButton:hover:not(:disabled) {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── 목록 ── */
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-bottom: var(--border-width) solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.item:hover {
+  background: var(--surface-hover);
+}
+
+.unread {
+  color: var(--text);
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--danger);
+}
+
+.type {
+  color: var(--text-secondary);
+  font-weight: var(--weight-semibold);
+}
+
+.itemTitle {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+
+.unread .itemTitle {
+  font-weight: var(--weight-semibold);
+}
+
+.itemBody {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+/* ── 전체 보기 화면 ── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.pageHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageTitle {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-2xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.pageList {
+  border-top: var(--border-width) solid var(--border);
+}
+
+/* 좁은 화면: 벨 오른쪽에 사용자 메뉴가 있어 오른쪽 정렬하면 왼쪽으로 넘친다. 화면 양 끝에 맞춘다 */
+@media (width < 768px) {
+  .panel {
+    position: fixed;
+    top: calc(var(--gnb-h) + var(--space-1));
+    right: var(--gutter);
+    left: var(--gutter);
+    width: auto;
+  }
+}

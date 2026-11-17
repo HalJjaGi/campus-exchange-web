@@ -1,0 +1,12 @@
+.countdown {
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+}
+
+.urgent {
+  color: var(--attention);
+}
+
+.expired {
+  color: var(--text-disabled);
+}

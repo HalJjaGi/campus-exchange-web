@@ -1,0 +1,33 @@
+.layout {
+  display: grid;
+  grid-template-areas:
+    "index"
+    "ranking"
+    "side";
+  gap: var(--space-6);
+}
+
+.index {
+  grid-area: index;
+}
+
+.ranking {
+  grid-area: ranking;
+  min-width: 0;
+}
+
+.side {
+  grid-area: side;
+  min-width: 0;
+}
+
+@media (width >= 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas:
+      "index index"
+      "ranking side";
+    align-items: start;
+    gap: var(--space-6) var(--space-8);
+  }
+}

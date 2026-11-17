@@ -1,0 +1,60 @@
+.scroll {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  font-size: var(--text-sm);
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  height: var(--row-h-dense);
+  padding: 0 var(--space-2);
+  border-bottom: var(--border-width) solid var(--border);
+  background: var(--bg);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  height: var(--row-h-dense);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: var(--border-width) solid var(--border);
+  white-space: nowrap;
+}
+
+.table .right {
+  text-align: right;
+}
+
+.up {
+  color: var(--up);
+}
+
+.down {
+  color: var(--down);
+}
+
+.muted {
+  color: var(--text-tertiary);
+}
+
+.strong {
+  font-weight: var(--weight-semibold);
+}
+
+.fresh td {
+  animation: flash var(--dur-flash) var(--ease-out);
+}
+
+@keyframes flash {
+  from {
+    background: var(--surface-hover);
+  }
+}

@@ -1,0 +1,111 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex-basis: 100%;
+}
+
+.picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.select {
+  appearance: none;
+  padding: 0 var(--space-6) 0 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--text-xl);
+  line-height: var(--leading-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  cursor: pointer;
+}
+
+.select option {
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+}
+
+.chevron {
+  position: absolute;
+  right: 0;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.meta {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.priceValue {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.rate {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.up {
+  color: var(--up);
+}
+
+.down {
+  color: var(--down);
+}
+
+.flat {
+  color: var(--flat);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.stats > div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.stats dt {
+  color: var(--text-tertiary);
+}
+
+.stats dd {
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+.asOf {
+  align-self: center;
+}
