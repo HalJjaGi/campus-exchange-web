@@ -781,7 +781,8 @@ function stepPrices() {
     const tick = tickOf(price);
     const drift = q.category === "MEME" ? 6 : 2;
     const move = Math.round((Math.random() - 0.5) * drift) * tick;
-    const next = Math.max(tick, price + move);
+    // 가격대 경계(1,000·5,000)를 넘으면 호가 단위가 바뀐다. 새 가격대 단위로 맞춘다
+    const next = floorTick(Math.max(tick, price + move));
     const rate = new Decimal(next).minus(prev).dividedBy(prev).toDecimalPlaces(4);
 
     q.price = String(next);

@@ -141,6 +141,18 @@ export class RealtimeClient {
     socket.onmessage = (ev) => this.handleMessage(ev.data);
   }
 
+  /**
+   * 네트워크가 돌아온 걸 알면 백오프(최대 10초)를 기다리지 않고 바로 다시 붙는다.
+   * 브라우저 online 이벤트와 개발용 "WS 복구" 버튼이 부른다
+   */
+  reconnectNow() {
+    if (!this.wantConnected || this.socket) return;
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.retryTimer = null;
+    this.attempt = 0;
+    this.open();
+  }
+
   private scheduleReconnect() {
     const delay = this.backoff[Math.min(this.attempt, this.backoff.length - 1)] ?? 10000;
     this.attempt += 1;

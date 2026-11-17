@@ -1,6 +1,7 @@
 import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { api } from "@/shared/api/client";
+import { Decimal } from "@/shared/lib/decimal";
 import { sharedKeys } from "@/shared/api/queryKeys";
 import { serverNow } from "@/shared/lib/serverClock";
 import { usePollingFallback, useRealtimeClient, useTopic } from "@/shared/realtime/RealtimeProvider";
@@ -135,4 +136,22 @@ export function useLedger(group: LedgerGroup, period: LedgerPeriod) {
     placeholderData: keepPreviousData,
     meta: { realtime: true },
   });
+}
+
+/**
+ * 보유 종목 평가손익 합계를 시세 이벤트로 바로 다시 계산한다(지갑 요약의 unrealizedPnl은 체결 때만 갱신된다).
+ * 보유 종목을 아직 못 받았거나 실패했으면 null — 부르는 쪽이 서버 값을 쓴다
+ */
+export function useLivePnl(): string | null {
+  const { data, isError } = useHoldings();
+  return useMemo(
+    () =>
+      data && !isError
+        ? data.items
+            .map(evaluate)
+            .reduce((sum, r) => sum.plus(r.pnl), new Decimal(0))
+            .toString()
+        : null,
+    [data, isError],
+  );
 }

@@ -8,6 +8,7 @@ import {
   type Time,
   type UTCTimestamp,
 } from "lightweight-charts";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cx } from "@/shared/lib/cx";
 import { formatPrice, formatTime } from "@/shared/lib/format";
@@ -16,8 +17,8 @@ import { useTopic } from "@/shared/realtime/RealtimeProvider";
 import type { CandleInterval, CandleSeries, ChartEvent, TradeBatch } from "@/shared/types/api";
 import { SegmentedControl } from "@/shared/ui/SegmentedControl";
 import { EmptyState, ErrorBlock, Skeleton } from "@/shared/ui/States";
-import { applyTrade, bucketStart, toChartTime, type Bar } from "./chartTime";
-import { useCandles } from "./queries";
+import { applyTrade, bucketStart, mergeLiveCandles, toChartTime, type Bar, type LiveCandle } from "./chartTime";
+import { tradeKeys, useCandles } from "./queries";
 import s from "./PriceChart.module.css";
 
 type ChartKind = "candle" | "line";
@@ -128,6 +129,8 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | ISeriesApi<"Line"> | null>(null);
   const lastBar = useRef<Bar | null>(null);
+  const live = useRef(new Map<number, LiveCandle>());
+  const qc = useQueryClient();
   const themeVersion = useThemeVersion();
   const onEventClickRef = useRef(onEventClick);
   useEffect(() => {
@@ -214,6 +217,7 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
     chartRef.current = chart;
     seriesRef.current = ser;
     lastBar.current = bars[bars.length - 1] ?? null;
+    live.current = new Map(); // 새 데이터로 다시 그렸으니 이전 실시간 봉은 버린다
 
     return () => {
       chart.remove();
@@ -221,6 +225,18 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
       seriesRef.current = null;
     };
   }, [bars, eventByTime, kind, series.interval]);
+
+  // 내려갈 때 실시간으로 그린 봉을 캐시에 돌려 둔다. 다음에 그릴 때 최근 봉이 빠지지 않는다
+  useEffect(() => {
+    const ref = live;
+    return () => {
+      if (ref.current.size === 0) return;
+      const updates = [...ref.current.values()];
+      qc.setQueryData<CandleSeries>(tradeKeys.candles(series.code, series.interval), (s) =>
+        s ? { ...s, candles: mergeLiveCandles(s.candles, updates) } : s,
+      );
+    };
+  }, [qc, series.code, series.interval]);
 
   // 테마 변경: 차트를 다시 만들지 않고 색만 바꾼다
   useEffect(() => {
@@ -255,10 +271,12 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
     if (!ser) return;
     const ordered = [...batch.items].sort((a, b) => a.at.localeCompare(b.at));
     for (const t of ordered) {
-      const time = toChartTime(bucketStart(Date.parse(t.at), series.interval));
-      const next = applyTrade(lastBar.current, time, Number(t.price));
+      const ms = bucketStart(Date.parse(t.at), series.interval);
+      const next = applyTrade(lastBar.current, toChartTime(ms), Number(t.price));
       if (next === lastBar.current) continue;
       lastBar.current = next;
+      const prev = live.current.get(ms);
+      live.current.set(ms, { ms, bar: next, addedVolume: (prev?.addedVolume ?? 0) + t.quantity });
       if (kind === "candle") (ser as ISeriesApi<"Candlestick">).update({ ...next, time: next.time as UTCTimestamp });
       else (ser as ISeriesApi<"Line">).update({ time: next.time as UTCTimestamp, value: next.close });
     }

@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useMatch } from "react-router-dom";
 import { usePolicy } from "@/shared/market/queries";
-import { useWallet } from "@/features/portfolio/queries";
+import { useLivePnl, useWallet } from "@/features/portfolio/queries";
 import { NotificationBell } from "@/features/notification/NotificationBell";
 import { useOrderFillNotifications } from "@/features/trade/mutations";
 import { cx } from "@/shared/lib/cx";
@@ -95,6 +95,7 @@ function PolicyBar() {
 /** 우측 하단 플로팅 위젯 — 보유 잔액·평가손익·금일 이자 (SCR-02 §6) */
 function AssetWidget() {
   const { data, isError, isFetching, refetch } = useWallet();
+  const livePnl = useLivePnl();
 
   return (
     <aside className={s.widget} aria-label="내 자산 요약">
@@ -109,7 +110,7 @@ function AssetWidget() {
           <div>
             <dt>평가손익</dt>
             <dd>
-              <Points value={data.unrealizedPnl} signed stale={isError} />
+              <Points value={livePnl ?? data.unrealizedPnl} signed stale={isError} />
             </dd>
           </div>
           <div>

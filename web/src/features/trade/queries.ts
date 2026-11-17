@@ -84,8 +84,9 @@ export function mergeTrades(current: TradeTick[], incoming: TradeTick[]): TradeT
   const seen = new Set(current.map((t) => t.id));
   const fresh = incoming.filter((t) => !seen.has(t.id));
   if (fresh.length === 0) return current;
-  const sorted = [...fresh].sort((a, b) => b.at.localeCompare(a.at));
-  return [...sorted, ...current].slice(0, TAPE_LEN);
+  // 들어온 순서를 믿지 않는다. REST 스냅샷에는 이미 받은 것보다 오래된 체결이 섞여 온다.
+  // 정렬은 안정 정렬이라 같은 시각이면 새로 들어온 쪽이 위에 남는다
+  return [...fresh, ...current].sort((a, b) => b.at.localeCompare(a.at)).slice(0, TAPE_LEN);
 }
 
 export function useTradeTape(code: string) {
@@ -104,7 +105,7 @@ export function useTradeTape(code: string) {
       const fetched = await api<TradeBatch>(`/api/stocks/${code}/trades`, { signal });
       const cached = qc.getQueryData<TradeBatch>(key);
       // 폴링·재연결 보정: 서버 목록과 이미 받은 이벤트를 합친다
-      return cached ? { ...fetched, items: mergeTrades(fetched.items, cached.items) } : fetched;
+      return cached ? { ...fetched, items: mergeTrades(cached.items, fetched.items) } : fetched;
     },
     refetchInterval: usePollingFallback(),
     meta: { realtime: true },
@@ -115,8 +116,9 @@ export function useCandles(code: string, interval: CandleInterval) {
   return useQuery({
     queryKey: tradeKeys.candles(code, interval),
     queryFn: ({ signal }) => api<CandleSeries>(`/api/stocks/${code}/candles?interval=${interval}`, { signal }),
-    // 실시간 봉 갱신은 차트가 체결 이벤트로 직접 처리한다. 캐시는 초기 이력용
-    staleTime: 60_000,
+    // 실시간 봉은 차트가 체결 이벤트로 그리고, 차트가 내려갈 때 캐시에 되돌려 쓴다(PriceChart).
+    // 다른 주기·다른 화면에 있던 동안의 봉은 캐시에 없으니 다시 보일 때마다 새로 받는다
+    staleTime: 0,
     meta: { realtime: true },
   });
 }
@@ -138,7 +140,10 @@ export function useTradingAccount(code: string) {
 
 export function useOpenOrders(code: string) {
   const qc = useQueryClient();
-  useTopic("user.orders", () => void qc.invalidateQueries({ queryKey: tradeKeys.openOrders(code) }));
+  const invalidate = () => void qc.invalidateQueries({ queryKey: tradeKeys.openOrders(code) });
+  useTopic("user.orders", invalidate);
+  // 새 주문 접수는 예약금만 바뀌어 잔고 이벤트로 온다. 다른 탭·기기에서 낸 주문도 목록에 보이게 한다
+  useTopic("user.wallet", invalidate);
 
   return useQuery({
     queryKey: tradeKeys.openOrders(code),

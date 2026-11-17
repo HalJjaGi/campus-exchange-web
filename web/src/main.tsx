@@ -27,6 +27,13 @@ async function boot() {
   }
 
   const realtime = new RealtimeClient(socketFactory);
+  window.addEventListener("online", () => realtime.reconnectNow());
+  if (useMock) {
+    const { mockNetwork } = await import("@/mocks/socket");
+    mockNetwork.subscribe(() => {
+      if (mockNetwork.isOnline()) realtime.reconnectNow();
+    });
+  }
 
   const root = document.getElementById("root");
   if (!root) throw new Error("#root가 없습니다");

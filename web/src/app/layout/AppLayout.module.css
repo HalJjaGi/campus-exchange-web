@@ -148,10 +148,13 @@
   color: var(--text-tertiary);
 }
 
+/* 아래 여백: 오른쪽 아래 자산 위젯(최대 4줄)이 마지막 내용(미체결 취소 버튼 등)을 가리지 않게 위젯 높이만큼 비운다 */
 .main {
+  --widget-clearance: 160px;
+
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--space-6) var(--gutter) var(--space-12);
+  padding: var(--space-6) var(--gutter) var(--widget-clearance);
 }
 
 .widget {
@@ -211,11 +214,6 @@
 
   .userTitle {
     display: none;
-  }
-
-  /* 하단에 고정된 자산 위젯이 마지막 내용을 가리지 않도록 */
-  .main {
-    padding-bottom: calc(var(--space-12) * 2);
   }
 
   .widget {

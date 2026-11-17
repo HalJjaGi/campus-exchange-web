@@ -1,4 +1,4 @@
-import { applyTrade, bucketStart } from "./chartTime";
+import { applyTrade, bucketStart, mergeLiveCandles } from "./chartTime";
 
 it("1분·5분 봉 시작 시각", () => {
   const ms = Date.UTC(2026, 10, 16, 5, 7, 42);
@@ -25,5 +25,32 @@ describe("applyTrade", () => {
 
   it("지난 봉의 늦은 체결은 무시", () => {
     expect(applyTrade(bar, 40, 99)).toBe(bar);
+  });
+});
+
+describe("mergeLiveCandles", () => {
+  const c = (t: string, close: string, v = 10) => ({ t, o: "100", h: "110", l: "90", c: close, v });
+  const bar = (close: number) => ({ time: 0, open: 100, high: 120, low: 90, close });
+
+  it("같은 봉은 실시간 값으로 바꾸고, 뒤에 생긴 봉은 붙인다", () => {
+    const out = mergeLiveCandles(
+      [c("2026-11-16T10:00:00.000Z", "105"), c("2026-11-16T10:01:00.000Z", "106")],
+      [
+        { ms: Date.parse("2026-11-16T10:01:00.000Z"), bar: bar(112), addedVolume: 3 },
+        { ms: Date.parse("2026-11-16T10:02:00.000Z"), bar: bar(113), addedVolume: 2 },
+      ],
+    );
+    expect(out.map((x) => [x.t.slice(11, 16), x.c, x.v])).toEqual([
+      ["10:00", "105", 10],
+      ["10:01", "112", 13],
+      ["10:02", "113", 2],
+    ]);
+  });
+
+  it("캐시보다 오래된 시각의 봉은 끼워 넣지 않는다", () => {
+    const base = [c("2026-11-16T10:05:00.000Z", "105")];
+    expect(
+      mergeLiveCandles(base, [{ ms: Date.parse("2026-11-16T10:00:00.000Z"), bar: bar(1), addedVolume: 1 }]),
+    ).toEqual(base);
   });
 });

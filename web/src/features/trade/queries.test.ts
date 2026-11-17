@@ -18,3 +18,10 @@ it("최대 50건", () => {
   const cur = Array.from({ length: 50 }, (_, i) => t(`o${i}`, `2026-11-16T09:00:${String(i).padStart(2, "0")}Z`));
   expect(mergeTrades(cur, [t("n", "2026-11-16T11:00:00Z")])).toHaveLength(50);
 });
+
+it("REST 재조회 결과를 합쳐도 시각 순서를 지키고 최신 체결을 남긴다", () => {
+  // 캐시: 실시간으로 받은 최신 체결. 서버 스냅샷: 그보다 오래된 체결 + 캐시에 없는 더 최신 체결
+  const cached = [t("c3", "2026-11-16T10:00:30Z"), t("c2", "2026-11-16T10:00:20Z")];
+  const fetched = [t("s4", "2026-11-16T10:00:40Z"), t("c3", "2026-11-16T10:00:30Z"), t("s1", "2026-11-16T10:00:10Z")];
+  expect(mergeTrades(cached, fetched).map((x) => x.id)).toEqual(["s4", "c3", "c2", "s1"]);
+});

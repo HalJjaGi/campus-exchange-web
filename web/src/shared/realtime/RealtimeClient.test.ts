@@ -133,3 +133,38 @@ it("직접 끊으면 재연결하지 않는다", () => {
   expect(sockets).toHaveLength(1);
   expect(client.getStatus()).toBe("idle");
 });
+
+it("reconnectNow는 백오프를 기다리지 않고 바로 다시 붙는다", () => {
+  const sockets: FakeSocket[] = [];
+  const client = new RealtimeClient(
+    () => {
+      const s = new FakeSocket();
+      sockets.push(s);
+      return s;
+    },
+    { backoff: [10_000] },
+  );
+  client.connect();
+  sockets[0]!.onopen?.();
+  sockets[0]!.close();
+  expect(client.getStatus()).toBe("polling");
+  expect(sockets).toHaveLength(1);
+
+  client.reconnectNow();
+  expect(sockets).toHaveLength(2); // 10초 기다리지 않음
+  sockets[1]!.onopen?.();
+  expect(client.getStatus()).toBe("open");
+
+  vi.advanceTimersByTime(10_000);
+  expect(sockets).toHaveLength(2); // 예약돼 있던 재시도는 취소됐다
+});
+
+it("연결 중이거나 직접 끊은 상태에서는 reconnectNow가 아무것도 하지 않는다", () => {
+  const { client, sockets } = setup();
+  client.connect();
+  client.reconnectNow();
+  expect(sockets).toHaveLength(1);
+  client.disconnect();
+  client.reconnectNow();
+  expect(sockets).toHaveLength(1);
+});
