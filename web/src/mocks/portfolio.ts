@@ -5,7 +5,7 @@
 import Decimal from "decimal.js-light";
 import { kstDate } from "@/features/portfolio/valuation";
 import type { AssetHistory, AssetSnapshot, HistoryRange } from "@/shared/types/api";
-import { JOINED_DAYS_AGO } from "./ledger";
+import { INITIAL_GRANT, JOINED_DAYS_AGO } from "./ledger";
 import { totalAsset } from "./market";
 
 const DAY = 86_400_000;
@@ -21,7 +21,10 @@ interface History {
 const histories = new Map<string, History>();
 let history: History = { joined: kstDate(Date.now()), snapshots: [] };
 
-/** 계정 자산 기록을 연다. 새 계정은 기록이 없다(오늘 가입했으면 내일부터 쌓인다) */
+/**
+ * 계정 자산 기록을 연다. 데모 계정만 지난 기록이 있고, 새 계정은 비어 있다.
+ * (가짜 서버에는 하루 한 번 기록하는 스케줄러가 없어서 새 계정 기록은 계속 비어 있다)
+ */
 export function openHistory(key: string, joinedAt: number, demo: boolean) {
   const existing = histories.get(key);
   if (existing) {
@@ -34,7 +37,7 @@ export function openHistory(key: string, joinedAt: number, demo: boolean) {
 
 function seedDemo(): AssetSnapshot[] {
   const snapshots: AssetSnapshot[] = [];
-  const start = new Decimal(1_000_000);
+  const start = new Decimal(INITIAL_GRANT);
   const yesterday = totalAsset().times(0.992 + Math.random() * 0.01);
   for (let ago = JOINED_DAYS_AGO; ago >= 1; ago--) {
     if (MISSING_DAYS_AGO.has(ago)) continue;
@@ -54,7 +57,7 @@ function seedDemo(): AssetSnapshot[] {
 export function getAssetHistory(range: HistoryRange): AssetHistory {
   const to = kstDate(Date.now() - DAY);
   const wanted = kstDate(Date.now() - RANGE_DAYS[range] * DAY);
-  let from = wanted > history.joined ? wanted : history.joined;
-  if (from > to) from = to; // 오늘 가입: 아직 기록할 날이 없다
+  // 오늘 가입했으면 from(오늘) > to(어제)인 빈 구간이 된다. 가입일 전 날짜를 만들지 않는다
+  const from = wanted > history.joined ? wanted : history.joined;
   return { from, to, items: history.snapshots.filter((s) => s.date >= from && s.date <= to) };
 }

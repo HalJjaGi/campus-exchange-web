@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { api } from "@/shared/api/client";
 import { ApiError } from "@/shared/api/errors";
 import { sessionKey } from "@/shared/api/queryKeys";
@@ -23,12 +23,21 @@ export function useSession() {
   });
 }
 
+/**
+ * 로그인 사용자를 바꾼다(로그인·로그아웃·가입). 이전 사용자의 잔고·주문·알림 캐시를 먼저 버린다.
+ * qc.clear()는 쓰지 않는다 — 세션 쿼리까지 지우면 RequireAuth가 보고 있던 쿼리가 사라져 변경을 못 받는다
+ */
+export function switchSession(qc: QueryClient, user: SessionUser | null) {
+  qc.removeQueries({ predicate: (q) => q.queryKey[0] !== sessionKey[0] });
+  qc.setQueryData(sessionKey, user);
+}
+
 export function useLogin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { email: string; password: string }) =>
       api<SessionUser>("/api/auth/login", { method: "POST", body }),
-    onSuccess: (user) => qc.setQueryData(sessionKey, user),
+    onSuccess: (user) => switchSession(qc, user),
   });
 }
 
@@ -36,11 +45,7 @@ export function useLogout() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api<void>("/api/auth/logout", { method: "POST" }),
-    // 실패해도 화면에서는 로그아웃 상태로 둔다. 남은 사용자 데이터는 버린다.
-    // qc.clear()는 쓰지 않는다 — 세션 쿼리까지 지우면 RequireAuth가 보고 있던 쿼리가 사라져 null 변경을 못 받는다
-    onSettled: () => {
-      qc.setQueryData(sessionKey, null);
-      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== sessionKey[0] });
-    },
+    // 실패해도 화면에서는 로그아웃 상태로 둔다
+    onSettled: () => switchSession(qc, null),
   });
 }

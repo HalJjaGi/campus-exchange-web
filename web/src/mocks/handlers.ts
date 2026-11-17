@@ -83,7 +83,25 @@ async function respondUnlessFailing<T>(area: string, fn: () => T) {
 
 const param = (v: string | readonly string[] | undefined) => (typeof v === "string" ? v : "");
 
+/** 로그인해야 쓰는 요청. 실서버처럼 로그아웃 상태면 401로 막는다 */
+const PRIVATE = /^\/api\/(me|orders|notifications|reports)(\/|$)/;
+const needsLogin = (req: Request) => {
+  const path = new URL(req.url).pathname;
+  return PRIVATE.test(path) || (path.startsWith("/api/posts") && req.method !== "GET");
+};
+
 export const handlers = [
+  // 아무것도 반환하지 않으면 아래 핸들러로 넘어간다
+  http.all("/api/*", async ({ request }) => {
+    if (!needsLogin(request)) return undefined;
+    try {
+      auth.me();
+      return undefined;
+    } catch {
+      await delay(LATENCY);
+      return HttpResponse.json({ code: "UNAUTHORIZED" }, { status: 401 });
+    }
+  }),
   /* ── 인증 ── */
   http.get("/api/auth/me", () => respond(auth.me)),
   http.post("/api/auth/login", async ({ request }) => {

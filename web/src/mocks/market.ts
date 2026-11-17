@@ -163,14 +163,14 @@ let account: Account = newAccount(new Decimal(0));
  * 계정 계좌를 연다(account.ts가 로그인할 때 부른다). 장부(openBook)를 먼저 열어야 한다 —
  * 처음 여는 계좌의 예수금은 그 장부의 지갑 잔액에서 시작한다.
  */
-export function openTradingAccount(key: string, holdings: Array<{ code: string; qty: number; avg: number }>) {
+export function openTradingAccount(key: string, holdings: Array<{ code: string; quantity: number; price: string }>) {
   const existing = accounts.get(key);
   if (existing) {
     account = existing;
     return;
   }
   account = newAccount(balanceOf("WALLET"));
-  for (const h of holdings) account.holdings.set(h.code, { qty: h.qty, avg: new Decimal(h.avg) });
+  for (const h of holdings) account.holdings.set(h.code, { qty: h.quantity, avg: new Decimal(h.price) });
   accounts.set(key, account);
 }
 

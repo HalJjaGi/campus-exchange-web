@@ -1,4 +1,4 @@
-/** 개발용 가짜 알림. 로그인한 한 사람 기준으로만 쌓는다 */
+/** 개발용 가짜 알림. 계정마다 따로 쌓이고, 로그인한 계정의 알림함이 열린다(account.ts) */
 import type { AppNotification, NotificationPage } from "@/shared/types/api";
 import { emit, mockId } from "./bus";
 import { MockError } from "./errors";
@@ -7,7 +7,7 @@ const PAGE = 15;
 
 const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
 
-const items: AppNotification[] = [
+const seed = (): AppNotification[] => [
   {
     id: "n-seed-2",
     type: "DISCLOSURE",
@@ -27,6 +27,15 @@ const items: AppNotification[] = [
     readAt: ago(90),
   },
 ];
+
+const boxes = new Map<string, AppNotification[]>();
+let items: AppNotification[] = [];
+
+export function openNotifications(key: string) {
+  const existing = boxes.get(key);
+  items = existing ?? seed();
+  if (!existing) boxes.set(key, items);
+}
 
 /** 새 알림 저장 + 온라인이면 바로 전달(SD-10) */
 export function addNotification(n: Omit<AppNotification, "id" | "createdAt" | "readAt">) {

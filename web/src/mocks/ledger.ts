@@ -14,6 +14,10 @@ const PAGE = 20;
 const DAY = 86_400_000;
 
 export const JOINED_DAYS_AGO = 21;
+/** 가입 지원금(SD-01). 가입 완료 모달의 initialGrant와 같다 */
+export const INITIAL_GRANT = "1000000";
+/** 데모 계정이 가입 다음 날 산 종목. 계좌 보유 종목도 여기서 만든다 */
+export const DEMO_BUY = { code: "CSE", name: "컴퓨터공학과", quantity: 30, price: "12000" } as const;
 
 interface Book {
   entries: LedgerEntry[];
@@ -87,17 +91,10 @@ export function seedDemoLedger() {
     d.setHours(h, m, 0, 0);
     return d.toISOString();
   };
-  record("WALLET", "AIRDROP", new Decimal(1_000_000), null, day(JOINED_DAYS_AGO, 10, 12));
+  record("WALLET", "AIRDROP", new Decimal(INITIAL_GRANT), null, day(JOINED_DAYS_AGO, 10, 12));
 
-  const trade: LedgerTrade = {
-    tradeId: mockId("t"),
-    code: "CSE",
-    name: "컴퓨터공학과",
-    side: "BUY",
-    quantity: 30,
-    price: "12000",
-  };
-  const gross = new Decimal(12000).times(30);
+  const trade: LedgerTrade = { tradeId: mockId("t"), side: "BUY", ...DEMO_BUY };
+  const gross = new Decimal(DEMO_BUY.price).times(DEMO_BUY.quantity);
   record("WALLET", "TRADE", gross.negated(), trade, day(JOINED_DAYS_AGO - 1, 9, 31));
   record("WALLET", "FEE", gross.times("0.001").toDecimalPlaces(2).negated(), trade, day(JOINED_DAYS_AGO - 1, 9, 31));
 

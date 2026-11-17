@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { EmailStep } from "@/features/auth/EmailStep";
 import { ProfileStep } from "@/features/auth/ProfileStep";
+import { switchSession } from "@/features/auth/session";
 import { WelcomeModal } from "@/features/auth/WelcomeModal";
-import { sessionKey } from "@/shared/api/queryKeys";
 import type { SignupResult } from "@/shared/types/api";
 import { AuthLayout } from "./AuthLayout";
 
@@ -44,8 +44,8 @@ export function SignupPage() {
         <WelcomeModal
           result={step.result}
           onStart={() => {
-            // 가입 응답으로 세션이 발급됐다. 로그인 상태로 바꾸고 대시보드로 간다
-            qc.setQueryData(sessionKey, step.result.user);
+            // 가입 응답으로 세션이 발급됐다. 로그인 중이던 다른 계정이 있었다면 그 데이터를 버린다
+            switchSession(qc, step.result.user);
             navigate("/", { replace: true });
           }}
         />
