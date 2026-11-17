@@ -7,6 +7,7 @@
 ```bash
 npm install
 npm run dev          # http://localhost:5173  (기본: 가짜 API + 가짜 실시간 시세)
+npm run demo         # 시연용: 포트 고정 + 로그인 화면 자동으로 열기 (준비 절차는 ../DEMO.md)
 ```
 
 - 로그인: 데모 계정 `demo@campus.ac.kr` / `campus2026`
