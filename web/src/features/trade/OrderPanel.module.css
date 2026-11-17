@@ -92,3 +92,26 @@
 .submit {
   margin-top: var(--space-1);
 }
+
+.shortcutHint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  margin: var(--space-1) var(--space-0) var(--space-0);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+}
+
+.shortcutHint kbd {
+  display: inline-block;
+  padding: var(--space-0) var(--space-1);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-family: var(--font-board);
+  font-size: var(--text-2xs);
+}

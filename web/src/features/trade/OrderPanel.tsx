@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { TriangleAlert } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { usePolicy } from "@/shared/market/queries";
 import { formatPercent, formatPoints, formatQuantity } from "@/shared/lib/format";
 import type { OrderKind, OrderSide, OrderbookLevel, OrderbookSnapshot, TradingState } from "@/shared/types/api";
@@ -55,9 +55,128 @@ export function OrderPanel({ code, tradingState }: Props) {
   );
 
   const quantity = draft.quantity ? Number(draft.quantity) : 0;
-  const orderDraft = { side: draft.side, kind: draft.kind, price: draft.price, quantity };
+  const orderDraft = useMemo(
+    () => ({ side: draft.side, kind: draft.kind, price: draft.price, quantity }),
+    [draft.side, draft.kind, draft.price, quantity],
+  );
   const check = ctx ? checkOrder(orderDraft, ctx) : null;
   const halted = tradingState !== "NORMAL";
+  const canSubmit =
+    !policy.isError && !account.isError && !!check?.preview && check.issues.length === 0 && !halted && !place.isPending;
+  const buy = draft.side === "BUY";
+
+  const submit = useCallback(() => {
+    if (!canSubmit) return;
+    place.submit({
+      code,
+      side: draft.side,
+      kind: draft.kind,
+      price: draft.kind === "LIMIT" ? parsePrice(draft.price)?.toString() : undefined,
+      quantity,
+    });
+  }, [canSubmit, place, code, draft.side, draft.kind, draft.price, quantity]);
+
+  // 거래 단축키 (SCR-03) — 한글/영문 자판 및 입력창 포커스 상태 지원
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTextInput =
+        target &&
+        (target.tagName === "TEXTAREA" ||
+          (target.tagName === "INPUT" && target.id !== "order-price-input" && target.id !== "order-qty-input") ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      // 일반 텍스트/댓글/검색 입력 중일 때는 타이핑 방해 금지
+      if (isTextInput) return;
+
+      const isOrderInput = target && (target.id === "order-price-input" || target.id === "order-qty-input");
+
+      // Ctrl, Meta(Cmd) 조합은 브라우저 기본 단축키 유지 (복사, 새로고침 등)
+      if (e.ctrlKey || e.metaKey) return;
+
+      const code = e.code;
+      const key = e.key.toLowerCase();
+
+      // B: 매수 (BUY) — 가격/수량 입력창에 포커스가 있어도 동작
+      if (code === "KeyB" || key === "b" || key === "ㅠ") {
+        e.preventDefault();
+        useOrderDraft.getState().setSide("BUY");
+        return;
+      }
+
+      // S: 매도 (SELL)
+      if (code === "KeyS" || key === "s" || key === "ㄴ") {
+        e.preventDefault();
+        useOrderDraft.getState().setSide("SELL");
+        return;
+      }
+
+      // L: 지정가 (LIMIT)
+      if (code === "KeyL" || key === "l" || key === "ㅣ") {
+        e.preventDefault();
+        useOrderDraft.getState().setKind("LIMIT");
+        return;
+      }
+
+      // M: 시장가 (MARKET)
+      if (code === "KeyM" || key === "m" || key === "ㅡ") {
+        e.preventDefault();
+        useOrderDraft.getState().setKind("MARKET");
+        return;
+      }
+
+      // P: 가격 입력 포커스 (시장가인 경우 지정가로 전환 후 포커스)
+      if (code === "KeyP" || key === "p" || key === "ㅔ") {
+        e.preventDefault();
+        useOrderDraft.getState().setKind("LIMIT");
+        requestAnimationFrame(() => {
+          const el = document.getElementById("order-price-input") as HTMLInputElement | null;
+          el?.focus();
+          el?.select();
+        });
+        return;
+      }
+
+      // Q: 수량 입력 포커스
+      if (code === "KeyQ" || key === "q" || key === "ㅂ") {
+        e.preventDefault();
+        const el = document.getElementById("order-qty-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select();
+        return;
+      }
+
+      // 숫자 입력창 내부에서는 일반 숫자 입력을 가로채지 않음 (단, Shift 조합은 허용)
+      if (isOrderInput && !e.shiftKey) {
+        return;
+      }
+
+      // 수량 비율 단축키 (1: 10%, 2: 25%, 3: 50%, 4: 100%)
+      let percent: (typeof QUICK)[number] | null = null;
+      if (code === "Digit1" || code === "Numpad1" || key === "1" || key === "!") percent = 10;
+      else if (code === "Digit2" || code === "Numpad2" || key === "2" || key === "@") percent = 25;
+      else if (code === "Digit3" || code === "Numpad3" || key === "3" || key === "#") percent = 50;
+      else if (code === "Digit4" || code === "Numpad4" || key === "4" || key === "$") percent = 100;
+
+      if (percent !== null && ctx) {
+        e.preventDefault();
+        const q = quickQuantity(percent, orderDraft, ctx);
+        useOrderDraft.getState().setQuantity(String(q || ""));
+        return;
+      }
+
+      // Enter: 주문 전송 (입력창 밖일 때)
+      if ((code === "Enter" || code === "NumpadEnter") && canSubmit && !isOrderInput) {
+        e.preventDefault();
+        submit();
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [ctx, orderDraft, canSubmit, submit]);
 
   if (policy.isError || account.isError) {
     return (
@@ -79,20 +198,6 @@ export function OrderPanel({ code, tradingState }: Props) {
   const priceError = showIssues ? issueOf("price") : undefined;
   const qtyError = quantity > 0 ? issueOf("quantity") : undefined;
   const fundsError = issueOf("funds");
-
-  const canSubmit = !!check?.preview && check.issues.length === 0 && !halted && !place.isPending;
-  const buy = draft.side === "BUY";
-
-  const submit = () => {
-    if (!canSubmit) return;
-    place.submit({
-      code,
-      side: draft.side,
-      kind: draft.kind,
-      price: draft.kind === "LIMIT" ? parsePrice(draft.price)?.toString() : undefined,
-      quantity,
-    });
-  };
 
   return (
     <section className={s.panel} aria-label="주문">
@@ -126,6 +231,7 @@ export function OrderPanel({ code, tradingState }: Props) {
         />
 
         <NumberField
+          id="order-price-input"
           label="가격"
           value={draft.price}
           onChange={draft.setPrice}
@@ -146,6 +252,7 @@ export function OrderPanel({ code, tradingState }: Props) {
 
         <div className={s.qtyGroup}>
           <NumberField
+            id="order-qty-input"
             label="수량"
             value={draft.quantity}
             onChange={draft.setQuantity}
@@ -154,8 +261,12 @@ export function OrderPanel({ code, tradingState }: Props) {
             error={qtyError}
           />
           <div className={s.quick} role="group" aria-label="수량 비율">
-            {QUICK.map((p) => (
-              <Chip key={p} onClick={() => ctx && draft.setQuantity(String(quickQuantity(p, orderDraft, ctx) || ""))}>
+            {QUICK.map((p, idx) => (
+              <Chip
+                key={p}
+                onClick={() => ctx && draft.setQuantity(String(quickQuantity(p, orderDraft, ctx) || ""))}
+                title={`단축키: ${idx + 1}`}
+              >
                 {p === 100 ? "MAX" : `${p}%`}
               </Chip>
             ))}
@@ -214,6 +325,11 @@ export function OrderPanel({ code, tradingState }: Props) {
         >
           {buy ? "매수 주문" : "매도 주문"}
         </Button>
+
+        <p className={s.shortcutHint}>
+          단축키: <kbd>B</kbd> 매수 · <kbd>S</kbd> 매도 · <kbd>L</kbd> 지정가 · <kbd>M</kbd> 시장가 · <kbd>P</kbd> 가격
+          · <kbd>Q</kbd> 수량
+        </p>
       </form>
     </section>
   );

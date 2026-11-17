@@ -5,6 +5,7 @@ import { caretFor, countSignificant, groupNumber, sanitizeNumber } from "@/share
 import s from "./NumberField.module.css";
 
 interface NumberFieldProps {
+  id?: string;
   label: string;
   /** 쉼표 없는 숫자 문자열. 비어 있을 수 있다 */
   value: string;
@@ -30,6 +31,7 @@ interface NumberFieldProps {
  * 붙여넣은 "12,350P" 같은 값은 숫자만 남긴다.
  */
 export function NumberField({
+  id: propId,
   label,
   value,
   onChange,
@@ -43,7 +45,8 @@ export function NumberField({
   hint,
   stepLabels = { down: "내리기", up: "올리기" },
 }: NumberFieldProps) {
-  const id = useId();
+  const generatedId = useId();
+  const id = propId ?? generatedId;
   const msgId = `${id}-msg`;
   const inputRef = useRef<HTMLInputElement>(null);
   /** 방금 입력에서 커서 앞에 있던 숫자 개수. 렌더 후 커서를 그 자리에 놓는다 */
@@ -97,6 +100,10 @@ export function NumberField({
             onChange(sanitizeNumber(el.value, decimal, maxDigits));
           }}
           onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.currentTarget.blur();
+              return;
+            }
             if (!onStep) return;
             if (e.key === "ArrowUp") {
               e.preventDefault();

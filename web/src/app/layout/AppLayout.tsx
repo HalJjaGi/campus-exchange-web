@@ -1,4 +1,6 @@
-import { NavLink, Outlet, useMatch } from "react-router-dom";
+import { Keyboard } from "lucide-react";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate, useMatch } from "react-router-dom";
 import { usePolicy } from "@/shared/market/queries";
 import { useLivePnl, useWallet } from "@/features/portfolio/queries";
 import { NotificationBell } from "@/features/notification/NotificationBell";
@@ -7,7 +9,9 @@ import { cx } from "@/shared/lib/cx";
 import { toDecimal } from "@/shared/lib/decimal";
 import { formatAnnualRate } from "@/shared/lib/format";
 import { ConnectionStatus } from "@/shared/ui/ConnectionStatus";
+import { IconButton } from "@/shared/ui/IconButton";
 import { AsOf, Points } from "@/shared/ui/Numbers";
+import { ShortcutModal } from "@/shared/ui/ShortcutModal";
 import { Skeleton } from "@/shared/ui/States";
 import s from "./AppLayout.module.css";
 import { UserMenu } from "./UserMenu";
@@ -24,6 +28,94 @@ export function AppLayout() {
   useOrderFillNotifications();
   // 마이페이지는 같은 정보를 본문에서 자세히 보여 준다
   const onMyPage = useMatch("/me") !== null;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [shortcutOpen, setShortcutOpen] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInput =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      // Meta, Ctrl 조합은 브라우저 기본 단축키 유지
+      if (e.metaKey || e.ctrlKey) return;
+
+      const code = e.code;
+      const key = e.key.toLowerCase();
+
+      // ? 또는 / 키: 단축키 안내 창 (일반 텍스트 입력 중이 아닐 때)
+      const isHelpKey =
+        key === "?" || (e.shiftKey && code === "Slash") || (!isInput && (code === "Slash" || key === "/"));
+
+      if (isHelpKey && !isInput) {
+        e.preventDefault();
+        setShortcutOpen((v) => !v);
+        return;
+      }
+
+      // Alt (Option) + 1~5는 전역 어디서나 내비게이션
+      if (e.altKey) {
+        const altRoutes: Record<string, string> = {
+          Digit1: "/",
+          Digit2: "/trade",
+          Digit3: "/community",
+          Digit4: "/arcade",
+          Digit5: "/me",
+          Numpad1: "/",
+          Numpad2: "/trade",
+          Numpad3: "/community",
+          Numpad4: "/arcade",
+          Numpad5: "/me",
+        };
+        const dest = altRoutes[code];
+        if (dest) {
+          e.preventDefault();
+          navigate(dest);
+          return;
+        }
+      }
+
+      // 입력창 밖일 때 단독 숫자키 이동
+      if (!isInput && !e.altKey && !e.shiftKey) {
+        // 거래 화면(/trade)에서는 1~4가 수량 단축키이므로 5(마이페이지)만 이동 허용
+        if (location.pathname.startsWith("/trade")) {
+          if (code === "Digit5" || code === "Numpad5" || key === "5") {
+            e.preventDefault();
+            navigate("/me");
+            return;
+          }
+        } else {
+          // 다른 화면에서는 1~5 모두 이동
+          const digitRoutes: Record<string, string> = {
+            Digit1: "/",
+            Digit2: "/trade",
+            Digit3: "/community",
+            Digit4: "/arcade",
+            Digit5: "/me",
+            Numpad1: "/",
+            Numpad2: "/trade",
+            Numpad3: "/community",
+            Numpad4: "/arcade",
+            Numpad5: "/me",
+          };
+          const dest = digitRoutes[code];
+          if (dest) {
+            e.preventDefault();
+            navigate(dest);
+            return;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [navigate, location.pathname]);
 
   return (
     <div className={s.shell}>
@@ -46,6 +138,9 @@ export function AppLayout() {
           </nav>
           <div className={s.right}>
             <ConnectionStatus />
+            <IconButton label="단축키 안내 (?)" onClick={() => setShortcutOpen(true)}>
+              <Keyboard size={18} aria-hidden />
+            </IconButton>
             <NotificationBell />
             <UserMenu />
           </div>
@@ -58,6 +153,7 @@ export function AppLayout() {
       </main>
 
       {!onMyPage && <AssetWidget />}
+      <ShortcutModal open={shortcutOpen} onClose={() => setShortcutOpen(false)} />
     </div>
   );
 }

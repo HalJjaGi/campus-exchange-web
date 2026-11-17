@@ -62,6 +62,18 @@ export function LoginPage() {
         <Button type="submit" variant="action" size="lg" block busy={login.isPending} disabled={!email || !password}>
           로그인
         </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="md"
+          block
+          onClick={() => {
+            setEmail("demo@campus.ac.kr");
+            setPassword("campus2026");
+          }}
+        >
+          시연용 데모 계정 자동 입력
+        </Button>
       </form>
     </AuthLayout>
   );

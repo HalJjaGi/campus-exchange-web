@@ -29,14 +29,16 @@ interface ChipProps {
   selected?: boolean;
   onClick?: () => void;
   className?: string;
+  title?: string;
 }
 
 /** 클릭 가능하면 버튼, 아니면 정보 칩 */
-export function Chip({ children, selected, onClick, className }: ChipProps) {
+export function Chip({ children, selected, onClick, className, title }: ChipProps) {
   if (onClick) {
     return (
       <button
         type="button"
+        title={title}
         aria-pressed={selected}
         className={cx(s.chip, selected && s.chipSelected, className)}
         onClick={onClick}
@@ -45,5 +47,9 @@ export function Chip({ children, selected, onClick, className }: ChipProps) {
       </button>
     );
   }
-  return <span className={cx(s.chip, className)}>{children}</span>;
+  return (
+    <span className={cx(s.chip, className)} title={title}>
+      {children}
+    </span>
+  );
 }
