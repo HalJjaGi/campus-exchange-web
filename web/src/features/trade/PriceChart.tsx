@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { cx } from "@/shared/lib/cx";
 import { formatPrice, formatTime } from "@/shared/lib/format";
 import { readTokens, useThemeVersion } from "@/shared/lib/theme";
+import { DISCLOSURE_TYPE_LABEL } from "@/shared/market/labels";
 import { useTopic } from "@/shared/realtime/RealtimeProvider";
 import type { CandleInterval, CandleSeries, ChartEvent, TradeBatch } from "@/shared/types/api";
 import { SegmentedControl } from "@/shared/ui/SegmentedControl";
@@ -22,13 +23,6 @@ import { tradeKeys, useCandles } from "./queries";
 import s from "./PriceChart.module.css";
 
 type ChartKind = "candle" | "line";
-
-const EVENT_LABEL: Record<ChartEvent["type"], string> = {
-  DIVIDEND: "배당",
-  BURN: "소각",
-  EVENT: "이벤트",
-  MONETARY: "통화정책",
-};
 
 /** 캔들/선 차트(SCR-03 §9). 공시·이벤트 시각에 마커, 마커와 아래 목록 둘 다로 요약을 연다 */
 export function PriceChart({ code }: { code: string }) {
@@ -69,7 +63,13 @@ export function PriceChart({ code }: { code: string }) {
         data.candles.length === 0 ? (
           <EmptyState message="아직 차트 데이터가 없어요." />
         ) : (
-          <ChartCanvas key={`${code}-${interval}-${kind}`} series={data} kind={kind} onEventClick={setSelected} />
+          <ChartCanvas
+            key={`${code}-${interval}-${kind}`}
+            series={data}
+            kind={kind}
+            selectedId={selected?.id ?? null}
+            onEventClick={setSelected}
+          />
         )
       ) : isError ? (
         <ErrorBlock message="차트를 불러오지 못했어요." onRetry={() => void refetch()} retrying={isFetching} />
@@ -89,7 +89,7 @@ export function PriceChart({ code }: { code: string }) {
                   onClick={() => setSelected((cur) => (cur?.id === ev.id ? null : ev))}
                 >
                   <span className="num">{formatTime(ev.at)}</span>
-                  <span className={s.eventType}>{EVENT_LABEL[ev.type]}</span>
+                  <span className={s.eventType}>{DISCLOSURE_TYPE_LABEL[ev.type]}</span>
                   {ev.title}
                 </button>
               </li>
@@ -121,10 +121,11 @@ const readColors = () =>
 interface CanvasProps {
   series: CandleSeries;
   kind: ChartKind;
+  selectedId: string | null;
   onEventClick: (ev: ChartEvent) => void;
 }
 
-function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
+function ChartCanvas({ series, kind, selectedId, onEventClick }: CanvasProps) {
   const el = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | ISeriesApi<"Line"> | null>(null);
@@ -133,8 +134,10 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
   const qc = useQueryClient();
   const themeVersion = useThemeVersion();
   const onEventClickRef = useRef(onEventClick);
+  const selectedIdRef = useRef(selectedId);
   useEffect(() => {
     onEventClickRef.current = onEventClick;
+    selectedIdRef.current = selectedId;
   });
 
   const bars: Bar[] = useMemo(
@@ -149,13 +152,14 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
     [series.candles],
   );
 
-  /** 마커는 이벤트가 속한 봉에 붙인다. 차트 범위 밖 이벤트는 그리지 않는다 */
-  const eventByTime = useMemo(() => {
-    const m = new Map<number, ChartEvent>();
+  /** 마커는 이벤트가 속한 봉에 붙인다. 한 봉에 여러 개면 모두 모은다. 차트 범위 밖 이벤트는 그리지 않는다 */
+  const eventsByTime = useMemo(() => {
+    const m = new Map<number, ChartEvent[]>();
     const first = bars[0]?.time ?? Infinity;
-    for (const ev of series.events) {
+    const ordered = [...series.events].sort((a, b) => a.at.localeCompare(b.at));
+    for (const ev of ordered) {
       const t = toChartTime(bucketStart(Date.parse(ev.at), series.interval));
-      if (t >= first) m.set(t, ev);
+      if (t >= first) m.set(t, [...(m.get(t) ?? []), ev]);
     }
     return m;
   }, [series.events, series.interval, bars]);
@@ -174,7 +178,13 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
       },
       grid: { vertLines: { visible: false }, horzLines: { color: c.grid } },
       rightPriceScale: { borderColor: c.border },
-      timeScale: { borderColor: c.border, timeVisible: series.interval !== "1d", secondsVisible: false },
+      // rightOffset: 마지막 봉 위 마커 글자가 오른쪽 끝에서 잘리지 않게 빈 칸을 둔다
+      timeScale: {
+        borderColor: c.border,
+        timeVisible: series.interval !== "1d",
+        secondsVisible: false,
+        rightOffset: 4,
+      },
       crosshair: { mode: CrosshairMode.Normal },
       localization: { priceFormatter: (p: number) => formatPrice(String(Math.round(p))) },
     });
@@ -196,21 +206,25 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
       (ser as ISeriesApi<"Candlestick">).setData(bars.map((b) => ({ ...b, time: b.time as UTCTimestamp })));
     else (ser as ISeriesApi<"Line">).setData(bars.map((b) => ({ time: b.time as UTCTimestamp, value: b.close })));
 
-    const markers: SeriesMarker<Time>[] = [...eventByTime.entries()]
+    const markers: SeriesMarker<Time>[] = [...eventsByTime.entries()]
       .sort(([a], [b]) => a - b)
-      .map(([t, ev]) => ({
+      .map(([t, evs]) => ({
         time: t as UTCTimestamp,
         position: "aboveBar",
         color: c.marker,
         shape: "circle",
-        text: EVENT_LABEL[ev.type],
+        text: `${DISCLOSURE_TYPE_LABEL[evs[0]!.type]}${evs.length > 1 ? ` +${evs.length - 1}` : ""}`,
       }));
     ser.setMarkers(markers);
 
     chart.subscribeClick((p) => {
       if (typeof p.time !== "number") return;
-      const ev = eventByTime.get(p.time);
-      if (ev) onEventClickRef.current(ev);
+      // 한 봉에 여러 개면 누를 때마다 다음 것을 연다
+      const evs = eventsByTime.get(p.time);
+      if (!evs?.length) return;
+      const i = evs.findIndex((e) => e.id === selectedIdRef.current);
+      const next = evs[(i + 1) % evs.length];
+      if (next) onEventClickRef.current(next);
     });
 
     chart.timeScale().fitContent();
@@ -224,7 +238,7 @@ function ChartCanvas({ series, kind, onEventClick }: CanvasProps) {
       chartRef.current = null;
       seriesRef.current = null;
     };
-  }, [bars, eventByTime, kind, series.interval]);
+  }, [bars, eventsByTime, kind, series.interval]);
 
   // 내려갈 때 실시간으로 그린 봉을 캐시에 돌려 둔다. 다음에 그릴 때 최근 봉이 빠지지 않는다
   useEffect(() => {

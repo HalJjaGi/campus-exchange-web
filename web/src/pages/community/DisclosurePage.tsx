@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { DISCLOSURE_TYPE_LABEL } from "@/features/community/DisclosureCard";
+import { DISCLOSURE_TYPE_LABEL } from "@/shared/market/labels";
 import { useDisclosure } from "@/features/community/queries";
 import { ApiError, userMessageOf } from "@/shared/api/errors";
 import { formatTime } from "@/shared/lib/format";

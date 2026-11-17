@@ -1,14 +1,8 @@
 import { Link } from "react-router-dom";
 import { formatTime } from "@/shared/lib/format";
+import { DISCLOSURE_TYPE_LABEL } from "@/shared/market/labels";
 import type { Disclosure } from "@/shared/types/api";
 import s from "./community.module.css";
-
-export const DISCLOSURE_TYPE_LABEL: Record<Disclosure["type"], string> = {
-  DIVIDEND: "배당",
-  BURN: "소각",
-  EVENT: "이벤트",
-  MONETARY: "통화정책",
-};
 
 /** 피드 속 공시 카드(SCR-04 §10). 게시글과 구분되는 별도 모양이고, 누르면 공시 상세로 간다 */
 export function DisclosureCard({ disclosure: d }: { disclosure: Disclosure }) {

@@ -54,7 +54,7 @@ export function WelcomeModal({ result, onStart }: { result: SignupResult; onStar
               {w.index.intraday.length >= 2 && (
                 <Sparkline points={w.index.intraday} width={400} height={56} label="종합지수 당일 추이" />
               )}
-              <p className={s.marketCaption}>시장은 이미 움직이고 있습니다</p>
+              <p className={s.marketCaption}>시장은 이미 움직이고 있어요</p>
             </div>
             <p className={s.headline}>{w.headline}</p>
           </>

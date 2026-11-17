@@ -80,7 +80,28 @@ export function maxMarketBuyQuantity(levels: OrderbookLevel[], available: Decima
     budget = budget.minus(unit.times(take));
     if (take < lv.quantity) break;
   }
+  // 위 계산은 수수료를 반올림하지 않는다. 화면 검증(합계에 한 번 반올림)과 서버 정산(체결 건마다 반올림)
+  // 둘 다로 실제 금액을 다시 따져 예산을 넘으면 1주씩 줄인다 — 경계에서 "부족 1P"가 뜨지 않게
+  while (qty > 0 && marketBuyCost(levels, qty, feeRate).gt(available)) qty -= 1;
   return qty;
+}
+
+/** 시장가 매수 정산 예상액. 합계 반올림과 체결 건별 반올림 중 큰 쪽 */
+function marketBuyCost(levels: OrderbookLevel[], quantity: number, feeRate: DecimalInput): Decimal {
+  const rate = toDecimal(feeRate);
+  let left = quantity;
+  let gross = new Decimal(0);
+  let perFillFee = new Decimal(0);
+  for (const lv of levels) {
+    if (left <= 0) break;
+    const take = Math.min(left, lv.quantity);
+    const g = toDecimal(lv.price).times(take);
+    gross = gross.plus(g);
+    perFillFee = perFillFee.plus(g.times(rate).toDecimalPlaces(2));
+    left -= take;
+  }
+  const totalFee = gross.times(rate).toDecimalPlaces(2);
+  return gross.plus(totalFee.gt(perFillFee) ? totalFee : perFillFee);
 }
 
 /* ───────── 주문 검증 ───────── */

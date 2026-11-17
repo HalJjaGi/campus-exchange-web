@@ -84,6 +84,16 @@ describe("시장가 추정", () => {
     expect(maxMarketBuyQuantity([lv("100", 2), lv("110", 3)], "1000", "0")).toBe(5);
     expect(maxMarketBuyQuantity([lv("100", 2), lv("110", 3)], "400", "0")).toBe(3);
   });
+
+  it("수수료 반올림 때문에 예산을 1P라도 넘으면 한 주 줄인다", () => {
+    // 871원 10주: 합계 반올림 수수료 8.71, 건별 반올림 0.87×10 = 8.70 → 큰 쪽 8,718.71이 예산과 같으니 10주
+    const levels = Array.from({ length: 10 }, () => lv("871", 1));
+    expect(maxMarketBuyQuantity(levels, "8718.71", "0.001")).toBe(10);
+    // 875원 10주: 건별 반올림 0.88×10 = 8.80이 합계 반올림 8.75보다 크다 → 8,758.8이 있어야 10주
+    const up = Array.from({ length: 10 }, () => lv("875", 1));
+    expect(maxMarketBuyQuantity(up, "8758.75", "0.001")).toBe(9);
+    expect(maxMarketBuyQuantity(up, "8758.8", "0.001")).toBe(10);
+  });
 });
 
 describe("checkOrder", () => {

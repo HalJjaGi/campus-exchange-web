@@ -2,17 +2,10 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cx } from "@/shared/lib/cx";
 import { formatTime } from "@/shared/lib/format";
-import type { Disclosure } from "@/shared/types/api";
+import { DISCLOSURE_TYPE_LABEL } from "@/shared/market/labels";
 import { EmptyState, ErrorBlock, SkeletonRows } from "@/shared/ui/States";
 import { useLatestDisclosures } from "./queries";
 import s from "./dashboard.module.css";
-
-const TYPE_LABEL: Record<Disclosure["type"], string> = {
-  DIVIDEND: "배당",
-  BURN: "소각",
-  EVENT: "이벤트",
-  MONETARY: "통화정책",
-};
 
 /**
  * 최근 공시(SCR-02 공시 배너, UC-12). 접속 후 새로 들어온 공시는 `새 공시`로 표시한다.
@@ -52,7 +45,7 @@ export function DisclosureList() {
                   onClick={() => setOpen(expanded ? null : d.id)}
                 >
                   <span className={s.disclosureMeta}>
-                    <span className={s.disclosureType}>{TYPE_LABEL[d.type]}</span>
+                    <span className={s.disclosureType}>{DISCLOSURE_TYPE_LABEL[d.type]}</span>
                     {fresh && <span className={s.freshLabel}>새 공시</span>}
                     <time className="num" dateTime={d.publishedAt}>
                       {formatTime(d.publishedAt)}

@@ -742,7 +742,14 @@ export function marketHeadline(): string {
   const top = getRanking().items[0];
   if (!top || Number(top.changeRate) <= 0) return "아직 크게 오른 종목은 없어요. 랭킹에서 흐름을 살펴보세요.";
   const pct = (Number(top.changeRate) * 100).toFixed(2);
-  return `지금 가장 많이 오른 종목은 ${top.name}(+${pct}%)이에요.`;
+  return `지금 가장 많이 오른 종목은 ${top.name}(+${pct}%)${copulaFor(top.name)}.`;
+}
+
+/** 받침이 있으면 "이에요", 없으면 "예요"(학과·테마 → 학과예요, 테마예요). 괄호 뒤 조사는 괄호 앞 낱말을 따른다 */
+function copulaFor(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  const hangul = code >= 0 && code <= 11171;
+  return hangul && code % 28 !== 0 ? "이에요" : "예요";
 }
 
 /* ───────── 조회 ───────── */
