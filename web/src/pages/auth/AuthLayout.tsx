@@ -8,12 +8,14 @@ export function AuthLayout({
   step,
   children,
   footer,
+  action,
 }: {
   title: string;
   /** "1 / 3" 같은 단계 표시 */
   step?: string;
   children: ReactNode;
   footer?: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div className={s.page}>
@@ -21,6 +23,7 @@ export function AuthLayout({
         <Link to="/" className={s.logo}>
           캠퍼스 거래소
         </Link>
+        {action}
       </header>
       <main className={s.main}>
         {step && <p className={s.step}>{step}</p>}

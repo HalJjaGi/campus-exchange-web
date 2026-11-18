@@ -62,7 +62,7 @@ function TradeScreen({ code }: { code: string }) {
         <Orderbook code={code} prevClose={q.prevClose} lastPrice={q.price} />
       </div>
       <div className={s.order}>
-        <OrderPanel code={code} tradingState={q.tradingState} />
+        <OrderPanel code={code} tradingState={q.tradingState} currentPrice={q.price} />
       </div>
       <div className={s.bottom}>
         <BottomTabs code={code} />

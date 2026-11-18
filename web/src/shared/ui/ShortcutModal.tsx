@@ -122,6 +122,12 @@ export function ShortcutModal({ open, onClose }: Props) {
               </div>
             </li>
             <li className={s.row}>
+              <span className={s.desc}>데모 계정 즉시 로그인 (로그인 화면)</span>
+              <div className={s.keys}>
+                <kbd className={s.kbd}>D</kbd>
+              </div>
+            </li>
+            <li className={s.row}>
               <span className={s.desc}>입력창 벗어나기 / 모달 닫기</span>
               <div className={s.keys}>
                 <kbd className={s.kbd}>Esc</kbd>
@@ -131,6 +137,7 @@ export function ShortcutModal({ open, onClose }: Props) {
         </section>
 
         <p className={s.tip}>* 한글(두벌식) 및 영문 자판 상태와 무관하게 모두 동작해요.</p>
+        <p className={s.tip}>* 거래 화면에서는 1~4가 수량 단축키로 쓰이므로 화면 이동 시 Alt+1~5를 사용하세요.</p>
       </div>
     </Modal>
   );

@@ -13,6 +13,7 @@ import { IconButton } from "@/shared/ui/IconButton";
 import { AsOf, Points } from "@/shared/ui/Numbers";
 import { ShortcutModal } from "@/shared/ui/ShortcutModal";
 import { Skeleton } from "@/shared/ui/States";
+import { toast } from "@/shared/ui/Toast";
 import s from "./AppLayout.module.css";
 import { UserMenu } from "./UserMenu";
 
@@ -23,6 +24,24 @@ const NAV = [
   { to: "/arcade", label: "오락실" },
   { to: "/me", label: "마이페이지" },
 ];
+
+const ROUTE_MAP: Record<string, { path: string; name: string; key: string }> = {
+  "1": { path: "/", name: "대시보드", key: "1" },
+  "2": { path: "/trade", name: "거래", key: "2" },
+  "3": { path: "/community", name: "커뮤니티", key: "3" },
+  "4": { path: "/arcade", name: "오락실", key: "4" },
+  "5": { path: "/me", name: "마이페이지", key: "5" },
+  Digit1: { path: "/", name: "대시보드", key: "1" },
+  Digit2: { path: "/trade", name: "거래", key: "2" },
+  Digit3: { path: "/community", name: "커뮤니티", key: "3" },
+  Digit4: { path: "/arcade", name: "오락실", key: "4" },
+  Digit5: { path: "/me", name: "마이페이지", key: "5" },
+  Numpad1: { path: "/", name: "대시보드", key: "1" },
+  Numpad2: { path: "/trade", name: "거래", key: "2" },
+  Numpad3: { path: "/community", name: "커뮤니티", key: "3" },
+  Numpad4: { path: "/arcade", name: "오락실", key: "4" },
+  Numpad5: { path: "/me", name: "마이페이지", key: "5" },
+};
 
 export function AppLayout() {
   useOrderFillNotifications();
@@ -50,7 +69,10 @@ export function AppLayout() {
 
       // ? 또는 / 키: 단축키 안내 창 (일반 텍스트 입력 중이 아닐 때)
       const isHelpKey =
-        key === "?" || (e.shiftKey && code === "Slash") || (!isInput && (code === "Slash" || key === "/"));
+        key === "?" ||
+        key === "？" ||
+        (e.shiftKey && code === "Slash") ||
+        (!isInput && (code === "Slash" || key === "/"));
 
       if (isHelpKey && !isInput) {
         e.preventDefault();
@@ -60,22 +82,11 @@ export function AppLayout() {
 
       // Alt (Option) + 1~5는 전역 어디서나 내비게이션
       if (e.altKey) {
-        const altRoutes: Record<string, string> = {
-          Digit1: "/",
-          Digit2: "/trade",
-          Digit3: "/community",
-          Digit4: "/arcade",
-          Digit5: "/me",
-          Numpad1: "/",
-          Numpad2: "/trade",
-          Numpad3: "/community",
-          Numpad4: "/arcade",
-          Numpad5: "/me",
-        };
-        const dest = altRoutes[code];
+        const dest = ROUTE_MAP[code] || ROUTE_MAP[key];
         if (dest) {
           e.preventDefault();
-          navigate(dest);
+          toast.show(`${dest.name} 화면으로 이동 (Alt+${dest.key})`);
+          navigate(dest.path);
           return;
         }
       }
@@ -86,27 +97,17 @@ export function AppLayout() {
         if (location.pathname.startsWith("/trade")) {
           if (code === "Digit5" || code === "Numpad5" || key === "5") {
             e.preventDefault();
+            toast.show("마이페이지 화면으로 이동 (단축키 5)");
             navigate("/me");
             return;
           }
         } else {
           // 다른 화면에서는 1~5 모두 이동
-          const digitRoutes: Record<string, string> = {
-            Digit1: "/",
-            Digit2: "/trade",
-            Digit3: "/community",
-            Digit4: "/arcade",
-            Digit5: "/me",
-            Numpad1: "/",
-            Numpad2: "/trade",
-            Numpad3: "/community",
-            Numpad4: "/arcade",
-            Numpad5: "/me",
-          };
-          const dest = digitRoutes[code];
+          const dest = ROUTE_MAP[code] || ROUTE_MAP[key];
           if (dest) {
             e.preventDefault();
-            navigate(dest);
+            toast.show(`${dest.name} 화면으로 이동 (단축키 ${dest.key})`);
+            navigate(dest.path);
             return;
           }
         }

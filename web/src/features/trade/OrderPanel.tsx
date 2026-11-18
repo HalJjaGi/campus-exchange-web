@@ -10,6 +10,7 @@ import { NumberField } from "@/shared/ui/NumberField";
 import { Points } from "@/shared/ui/Numbers";
 import { SegmentedControl } from "@/shared/ui/SegmentedControl";
 import { ErrorBlock, Skeleton } from "@/shared/ui/States";
+import { toast } from "@/shared/ui/Toast";
 import { usePlaceOrder } from "./mutations";
 import { useOrderDraft } from "./orderDraft";
 import { orderbookQuery, useTradingAccount } from "./queries";
@@ -22,10 +23,11 @@ const NO_LEVELS: OrderbookLevel[] = [];
 interface Props {
   code: string;
   tradingState: TradingState;
+  currentPrice?: string;
 }
 
 /** 주문 패널(SCR-03 §3~5). 호가창과 독립적으로 렌더링된다 */
-export function OrderPanel({ code, tradingState }: Props) {
+export function OrderPanel({ code, tradingState, currentPrice }: Props) {
   const draft = useOrderDraft();
   const policy = usePolicy();
   const account = useTradingAccount(code);
@@ -102,6 +104,7 @@ export function OrderPanel({ code, tradingState }: Props) {
       if (code === "KeyB" || key === "b" || key === "ㅠ") {
         e.preventDefault();
         useOrderDraft.getState().setSide("BUY");
+        toast.show("매수 모드 전환 (단축키 B)");
         return;
       }
 
@@ -109,6 +112,7 @@ export function OrderPanel({ code, tradingState }: Props) {
       if (code === "KeyS" || key === "s" || key === "ㄴ") {
         e.preventDefault();
         useOrderDraft.getState().setSide("SELL");
+        toast.show("매도 모드 전환 (단축키 S)");
         return;
       }
 
@@ -116,6 +120,7 @@ export function OrderPanel({ code, tradingState }: Props) {
       if (code === "KeyL" || key === "l" || key === "ㅣ") {
         e.preventDefault();
         useOrderDraft.getState().setKind("LIMIT");
+        toast.show("지정가 주문 선택 (단축키 L)");
         return;
       }
 
@@ -123,6 +128,7 @@ export function OrderPanel({ code, tradingState }: Props) {
       if (code === "KeyM" || key === "m" || key === "ㅡ") {
         e.preventDefault();
         useOrderDraft.getState().setKind("MARKET");
+        toast.show("시장가 주문 선택 (단축키 M)");
         return;
       }
 
@@ -130,6 +136,7 @@ export function OrderPanel({ code, tradingState }: Props) {
       if (code === "KeyP" || key === "p" || key === "ㅔ") {
         e.preventDefault();
         useOrderDraft.getState().setKind("LIMIT");
+        toast.show("가격 입력창 포커스 (단축키 P)");
         requestAnimationFrame(() => {
           const el = document.getElementById("order-price-input") as HTMLInputElement | null;
           el?.focus();
@@ -141,6 +148,7 @@ export function OrderPanel({ code, tradingState }: Props) {
       // Q: 수량 입력 포커스
       if (code === "KeyQ" || key === "q" || key === "ㅂ") {
         e.preventDefault();
+        toast.show("수량 입력창 포커스 (단축키 Q)");
         const el = document.getElementById("order-qty-input") as HTMLInputElement | null;
         el?.focus();
         el?.select();
@@ -154,21 +162,39 @@ export function OrderPanel({ code, tradingState }: Props) {
 
       // 수량 비율 단축키 (1: 10%, 2: 25%, 3: 50%, 4: 100%)
       let percent: (typeof QUICK)[number] | null = null;
-      if (code === "Digit1" || code === "Numpad1" || key === "1" || key === "!") percent = 10;
-      else if (code === "Digit2" || code === "Numpad2" || key === "2" || key === "@") percent = 25;
-      else if (code === "Digit3" || code === "Numpad3" || key === "3" || key === "#") percent = 50;
-      else if (code === "Digit4" || code === "Numpad4" || key === "4" || key === "$") percent = 100;
+      let percentKey = "1";
+      if (code === "Digit1" || code === "Numpad1" || key === "1" || key === "!") {
+        percent = 10;
+        percentKey = "1";
+      } else if (code === "Digit2" || code === "Numpad2" || key === "2" || key === "@") {
+        percent = 25;
+        percentKey = "2";
+      } else if (code === "Digit3" || code === "Numpad3" || key === "3" || key === "#") {
+        percent = 50;
+        percentKey = "3";
+      } else if (code === "Digit4" || code === "Numpad4" || key === "4" || key === "$") {
+        percent = 100;
+        percentKey = "4";
+      }
 
       if (percent !== null && ctx) {
         e.preventDefault();
-        const q = quickQuantity(percent, orderDraft, ctx);
+        let targetDraft = orderDraft;
+        if (targetDraft.kind === "LIMIT" && !targetDraft.price && currentPrice) {
+          useOrderDraft.getState().setPrice(currentPrice);
+          targetDraft = { ...targetDraft, price: currentPrice };
+        }
+        const q = quickQuantity(percent, targetDraft, ctx);
         useOrderDraft.getState().setQuantity(String(q || ""));
+        const label = percent === 100 ? "MAX" : `${percent}%`;
+        toast.show(`수량 ${label} 설정 (${q}주, 단축키 ${percentKey})`);
         return;
       }
 
       // Enter: 주문 전송 (입력창 밖일 때)
       if ((code === "Enter" || code === "NumpadEnter") && canSubmit && !isOrderInput) {
         e.preventDefault();
+        toast.show("주문 전송 중...");
         submit();
         return;
       }
@@ -176,7 +202,7 @@ export function OrderPanel({ code, tradingState }: Props) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [ctx, orderDraft, canSubmit, submit]);
+  }, [ctx, orderDraft, canSubmit, submit, currentPrice]);
 
   if (policy.isError || account.isError) {
     return (
